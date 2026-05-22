@@ -1,3 +1,4 @@
+# This script is to be run on the virtual machine for network log collection
 import socket
 import struct
 from scapy.all import PcapWriter, Ether, IP, TCP, UDP

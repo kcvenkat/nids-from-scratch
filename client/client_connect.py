@@ -1,9 +1,12 @@
+#This script is to be run on the host to connect with the virtual machine for packet sniffing
+
 from scapy.all import sniff
 import struct
 import socket
 
 SERVER = "172.16.109.129"
 PORT = 5000
+IFACE = "en0"
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect((SERVER, PORT))
@@ -18,6 +21,6 @@ def detect(pkt):
         print("ERROR:", e)
 
 try:
-    sniff(iface ="en0", prn= detect, store = False)
+    sniff(iface = IFACE, prn= detect, store = False)
 finally:
     client.close()
