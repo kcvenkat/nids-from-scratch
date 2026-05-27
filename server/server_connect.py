@@ -1,7 +1,7 @@
 # This script is to be run on the virtual machine for network log collection
 import socket
 import struct
-from scapy.all import PcapWriter, IP, TCP, UDP, ICMP
+from scapy.all import PcapWriter, Ether, IP, TCP, UDP, ICMP
 import os
 from datetime import datetime, timezone
 import time
