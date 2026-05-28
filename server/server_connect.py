@@ -43,8 +43,8 @@ def print_formatted(pkt):
         dst_ip = pkt[IP].dst
 
         protocol = pkt[IP].proto
-        now = time.time()
 
+        flags = ""
         if ICMP in pkt:
             src_port = "-"
             dst_port = "-"
@@ -55,6 +55,7 @@ def print_formatted(pkt):
             dst_port = pkt[TCP].dport
             protocol = "TCP"
             threshold = 100
+            flags = str(pkt[TCP].flags)
 
         elif UDP in pkt:
             src_port = pkt[UDP].sport
@@ -68,7 +69,7 @@ def print_formatted(pkt):
             return
         count = track_and_check(src_ip, dst_ip, protocol, 10, threshold)
             
-        print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{protocol}]")
+        print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{protocol}{':' + flags if flags else ''}]")
         
 def print_tracker():
     print("\n" + "="*60)
