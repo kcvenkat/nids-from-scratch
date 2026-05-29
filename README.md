@@ -44,7 +44,7 @@ nids-from-scratch/
 
 ## VMware Setup
 
-The project uses a macOS host machine and an Ubuntu Server VM running in VMware Fusion. The receiving device does not need to be Ubuntu specifically — any machine capable of running the required dependencies and communicating with the host can function as the collector.
+The project uses a macOS host machine and an Ubuntu Server VM running in VMware Fusion. The receiving device does not need to be Ubuntu specifically. Any machine capable of running the required dependencies and communicating with the host can function as the collector.
 
 The collector is intentionally separated from the host machine to follow the security principle of storing logs on a separate system.
 
