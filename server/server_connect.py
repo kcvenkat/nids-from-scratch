@@ -42,7 +42,7 @@ try:
 
     while True:
         if time.time() - file_create_time >= ROTATE_INTERVAL:
-            rotate(writer)
+            writer = rotate(writer)
             file_create_time = time.time()
         
         length_data = recv_exact(conn, 4)

@@ -2,17 +2,9 @@ from collections import deque, defaultdict
 import time
 from server.alert import alert
 
-tracker = defaultdict(lambda: {
-    "ICMP": deque(),
-    "TCP": deque(),
-    "UDP": deque()
-})
+tracker = defaultdict(lambda: defaultdict(deque))
+attack_state = defaultdict(lambda: defaultdict(bool))
 
-attack_state = defaultdict(lambda: {
-    "ICMP": False,
-    "TCP": False,
-    "UDP": False
-})
 
 def get_window_count(src_ip, protocol, window):
     now = time.time()

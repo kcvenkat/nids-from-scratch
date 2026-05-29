@@ -14,35 +14,30 @@ def print_formatted(pkt):
     ).strftime("%Y-%m-%d %H:%M:%S.%f")
 
     if IP in pkt:
-
         src_ip = pkt[IP].src
         dst_ip = pkt[IP].dst
 
-        protocol = pkt[IP].proto
+        event_type = pkt[IP].proto
 
-        flags = ""
         if ICMP in pkt:
+            event_type = f"ICMP:{pkt[ICMP].type}"
             src_port = "-"
             dst_port = "-"
-            protocol = "ICMP"
         elif TCP in pkt:
+            event_type = f"TCP:{pkt[TCP].flags}"
             src_port = pkt[TCP].sport
             dst_port = pkt[TCP].dport
-            protocol = "TCP"
-            flags = str(pkt[TCP].flags)
-
         elif UDP in pkt:
+            event_type = "UDP"
             src_port = pkt[UDP].sport
             dst_port = pkt[UDP].dport
-            protocol = "UDP"
-
         else:
             src_port = "-"
             dst_port = "-"
             return
             
-        print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{protocol}{':' + flags if flags else ''}]")
-        record_packet(src_ip, protocol)
+        print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
+        record_packet(src_ip, event_type)
 
 def print_tracker():
     print("\n" + "="*60)
