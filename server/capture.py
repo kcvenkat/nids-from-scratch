@@ -1,7 +1,8 @@
 from scapy.all import PcapWriter, IP, ICMP, UDP, TCP #type: ignore
 from datetime import datetime, timezone
 import os
-from detectors.utils import tracker
+from detectors.utils import tracker, record_packet
+import time
 
 MAX_FILES = 48
 ROTATE_INTERVAL = 1800
@@ -11,8 +12,6 @@ def print_formatted(pkt):
     pkt.time,
     tz=timezone.utc
     ).strftime("%Y-%m-%d %H:%M:%S.%f")
-
-    threshold = 0
 
     if IP in pkt:
 
@@ -26,19 +25,16 @@ def print_formatted(pkt):
             src_port = "-"
             dst_port = "-"
             protocol = "ICMP"
-            threshold = 50
         elif TCP in pkt:
             src_port = pkt[TCP].sport
             dst_port = pkt[TCP].dport
             protocol = "TCP"
-            threshold = 100
             flags = str(pkt[TCP].flags)
 
         elif UDP in pkt:
             src_port = pkt[UDP].sport
             dst_port = pkt[UDP].dport
             protocol = "UDP"
-            threshold = 200
 
         else:
             src_port = "-"
@@ -46,7 +42,8 @@ def print_formatted(pkt):
             return
             
         print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{protocol}{':' + flags if flags else ''}]")
-        
+        record_packet(src_ip, protocol)
+
 def print_tracker():
     print("\n" + "="*60)
     print(f"{'IP Address':<20} {'Protocol':<10} {'Count'}")

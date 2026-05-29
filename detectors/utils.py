@@ -23,7 +23,7 @@ def get_window_count(src_ip, protocol, window):
 
     return len(timestamps)
 
-def track_and_check(src_ip, dst_ip, protocol, window, threshold):
+def track(src_ip, dst_ip, protocol, window, threshold):
     tracker[src_ip][protocol].append(time.time())
     count = get_window_count(src_ip, protocol, window)
     if count > threshold:
@@ -34,3 +34,6 @@ def track_and_check(src_ip, dst_ip, protocol, window, threshold):
     else:
         attack_state[src_ip][protocol] = False
     return None
+
+def record_packet(src_ip, protocol):
+    tracker[src_ip][protocol].append(time.time())
