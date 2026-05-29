@@ -2,12 +2,9 @@
 import socket
 import struct
 from scapy.all import Ether, IP, TCP, UDP, ICMP #type:ignore
-from capture import *
+from .capture import *
 import os
-from datetime import datetime, timezone
 import time
-from alert import alert
-from detectors.utils import track_and_check, get_window_count
 
 PORT = 5000
 
