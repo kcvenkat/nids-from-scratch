@@ -8,7 +8,7 @@ def detect_flood(src_ip, dst_ip, event_type, window, threshold):
     if count > threshold:
         if not attack_state[src_ip][event_type]:
             attack_state[src_ip][event_type] = True
-            alert(src_ip, dst_ip, event_type)
+            alert(src_ip, dst_ip, event_type, "ICMP Flood")
             return count
     else:
         attack_state[src_ip][event_type] = False

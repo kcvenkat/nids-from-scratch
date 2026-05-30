@@ -9,7 +9,7 @@ ALERT_NAMES = {
 }
 
 
-def alert(src, dst, event_type):
+def alert(src, dst, event_type, alert_type):
     print("ALERT ALERT ALERT ALERT ALERT ALERT")
     print()
     print()
@@ -20,8 +20,8 @@ def alert(src, dst, event_type):
         "src_ip": src,
         "dst_ip": dst,
         "event_type": event_type,
-        "alert_type": "flood",
-        "message": f"{alert_name} flood detected from {src}"
+        "alert_type": alert_type,
+        "message": f"{alert_name} detected from {src}"
     }
 
     with open("alerts.json", "a") as f:
