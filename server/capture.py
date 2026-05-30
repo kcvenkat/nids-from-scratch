@@ -2,7 +2,7 @@ from scapy.all import PcapWriter, IP, ICMP, UDP, TCP #type: ignore
 from datetime import datetime, timezone
 import os
 from detectors.utils import tracker, record_packet
-import time
+from detectors import DETECTORS
 
 MAX_FILES = 48
 ROTATE_INTERVAL = 1800
@@ -38,6 +38,9 @@ def print_formatted(pkt):
             
         print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
         record_packet(src_ip, event_type)
+        
+        for detector in DETECTORS:
+            detector(src_ip, dst_ip, event_type)
 
 def print_tracker():
     print("\n" + "="*60)
