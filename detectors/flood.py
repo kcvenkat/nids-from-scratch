@@ -1,4 +1,4 @@
-from utils import tracker, get_window_count, attack_state
+from .utils import tracker, get_window_count, attack_state
 from server.alert import alert
 import time
 
