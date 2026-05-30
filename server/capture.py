@@ -1,7 +1,7 @@
 from scapy.all import PcapWriter, IP, ICMP, UDP, TCP #type: ignore
 from datetime import datetime, timezone
 import os
-from detectors.utils import tracker, record_packet
+from detectors.utils import *
 from detectors import DETECTORS
 
 MAX_FILES = 48
@@ -27,6 +27,18 @@ def print_formatted(pkt):
             event_type = f"TCP:{pkt[TCP].flags}"
             src_port = pkt[TCP].sport
             dst_port = pkt[TCP].dport
+            
+            conn = (src_ip, src_port, dst_ip, dst_port)
+            if event_type == "TCP:S":
+                record_tcp(src_ip, src_port, dst_ip, dst_port)
+                record_port(src_ip, dst_port)
+            elif event_type == "TCP:SA":
+                conn = reverse_conn(conn)
+                if conn in tcp_connection_tracker:
+                    set_synack(conn)
+            elif event_type == "TCP:A":
+                if conn in tcp_connection_tracker:
+                    set_ack(conn)
         elif UDP in pkt:
             event_type = "UDP"
             src_port = pkt[UDP].sport
