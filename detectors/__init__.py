@@ -1,3 +1,3 @@
-from .flood import detect_icmp
+from .flood import detect_flood
 
-DETECTORS = [detect_icmp]
+DETECTORS = [detect_flood]
