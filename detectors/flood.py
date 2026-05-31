@@ -7,9 +7,9 @@ WINDOW = 5
 
 FLOOD_RULES = {
     #event_type: max packets allowed per window, name of flood
-    "ICMP:8": {"threshold": 100, "message": "ICMP Echo Flood"},
-    "TCP:S": {"threshold": 200, "message": "TCP SYN Flood"},
-    "UDP": {"threshold": 300, "message": "UDP Flood"},
+    "ICMP:8": {"threshold": 500, "message": "ICMP Echo Flood"},
+    "TCP:S": {"threshold": 1000, "message": "TCP SYN Flood"},
+    "UDP": {"threshold": 2000, "message": "UDP Flood"},
 }
 
 
