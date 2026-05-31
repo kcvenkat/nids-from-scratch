@@ -52,7 +52,8 @@ def print_formatted(pkt):
         record_packet(src_ip, event_type)
         
         for detector in DETECTORS:
-            detector(src_ip, dst_ip, event_type)
+            if detector(src_ip, dst_ip, event_type):
+                return
 
 def print_tracker():
     print("\n" + "="*60)

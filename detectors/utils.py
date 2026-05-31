@@ -85,3 +85,25 @@ def set_ack(conn):
         state["ack"] = True
         tcp_connection_tracker[conn]["last_seen"] = time.time()
         print("connection established")
+
+def is_half_open(conn):
+    if conn not in tcp_connection_tracker:
+        return False
+    
+    state = tcp_connection_tracker[conn]
+
+    return state["syn"] and not state["ack"]
+
+def get_half_open_tcp(src_ip):
+    count = 0
+
+    for conn in tcp_connection_tracker:
+        ip = conn[0]
+
+        if ip != src_ip:
+            continue
+
+        if is_half_open(conn):
+            count += 1
+
+    return count
