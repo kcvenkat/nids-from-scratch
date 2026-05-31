@@ -8,7 +8,7 @@ def detect_syn_scan(src_ip, dst_ip, event_type):
     ports = get_unique_ports(src_ip, 30)
     half_open = get_half_open_tcp(src_ip)
 
-    if ports == 100 and half_open == 50:
+    if ports == 100:
         if not attack_state[src_ip]["syn_scan"]:
             attack_state[src_ip]["syn_scan"] = True
             alert(src_ip, dst_ip, event_type, "TCP SYN Scan")

@@ -14,6 +14,8 @@ FLOOD_RULES = {
 
 
 def detect_flood(src_ip, dst_ip, event_type):
+    if attack_state[src_ip]["syn_scan"]:
+        return False
     if event_type not in FLOOD_RULES:
         return False
     tracker[src_ip][event_type].append(time.time())
