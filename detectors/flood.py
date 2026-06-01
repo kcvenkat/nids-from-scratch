@@ -12,7 +12,6 @@ FLOOD_RULES = {
     "UDP": {"threshold": 2000, "message": "UDP Flood"},
 }
 
-
 def detect_flood(src_ip, dst_ip, event_type):
     if attack_state[src_ip]["syn_scan"]:
         return False

@@ -1,4 +1,4 @@
 from .flood import detect_flood
-from .scan import detect_syn_scan
+from .scan import detect_port_scan
 
-DETECTORS = [detect_syn_scan, detect_flood]
+DETECTORS = [detect_port_scan, detect_flood]
