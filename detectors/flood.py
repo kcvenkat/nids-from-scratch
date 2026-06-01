@@ -13,7 +13,7 @@ FLOOD_RULES = {
 }
 
 def detect_flood(src_ip, dst_ip, event_type):
-    if attack_state[src_ip]["syn_scan"]:
+    if attack_state[src_ip]["TCP SYN Scan"]:
         return False
     if event_type not in FLOOD_RULES:
         return False
