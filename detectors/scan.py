@@ -5,6 +5,8 @@ SCAN_RULES = {
     #event_type: port threshold, message
     "TCP:S": {"ports": 300, "half_open": 200, "message": "TCP SYN Scan"},
     "TCP:FPU": {"ports": 100, "half_open": None, "message": "XMAS Scan"},
+    "TCP:": {"ports": 50, "half_open": None, "message": "NULL Scan"},
+    "TCP:F": {"ports": 300, "half_open": None, "message": "FIN Scan"}
 }
 def detect_port_scan(src_ip, dst_ip, event_type):
     if event_type not in SCAN_RULES:
