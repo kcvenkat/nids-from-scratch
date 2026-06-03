@@ -29,9 +29,10 @@ def print_formatted(pkt):
             dst_port = pkt[TCP].dport
             
             conn = (src_ip, src_port, dst_ip, dst_port)
+            record_port(src_ip, dst_port)
+            
             if event_type == "TCP:S":
                 record_tcp(src_ip, src_port, dst_ip, dst_port)
-                record_port(src_ip, dst_port)
             elif event_type == "TCP:SA":
                 conn = reverse_conn(conn)
                 if conn in tcp_connection_tracker:
