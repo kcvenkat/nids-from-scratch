@@ -1,41 +1,64 @@
 from .utils import get_half_open_tcp, get_unique_ports, attack_state
 from server.alert import alert
+class ScanDetector:
+    SCAN_RULES = {
+        #event_type: port threshold, half open connections allowed, message
+        "TCP:S": {"ports": 300, "half_open": 200, "message": "TCP SYN Scan"},
+        "TCP:FPU": {"ports": 100, "half_open": None, "message": "XMAS Scan"},
+        "TCP:": {"ports": 50, "half_open": None, "message": "NULL Scan"},
+        "TCP:F": {"ports": 300, "half_open": None, "message": "FIN Scan"},
+        "TCP:A": {"ports": 300, "half_open": None, "message": "ACK Scan"},
+        "TCP:FA": {"ports": 50, "half_open": None, "message": "Maimon Scan"},
+        "UDP": {"ports": 100, "half_open": None, "message": "UDP Scan"}
+    }
 
-SCAN_RULES = {
-    #event_type: port threshold, message
-    "TCP:S": {"ports": 300, "half_open": 200, "message": "TCP SYN Scan"},
-    "TCP:FPU": {"ports": 100, "half_open": None, "message": "XMAS Scan"},
-    "TCP:": {"ports": 50, "half_open": None, "message": "NULL Scan"},
-    "TCP:F": {"ports": 300, "half_open": None, "message": "FIN Scan"},
-    "TCP:A": {"ports": 300, "half_open": None, "message": "ACK Scan"},
-    "TCP:FA": {"ports": 50, "half_open": None, "message": "Maimon Scan"},
-    "UDP": {"ports": 100, "half_open": None, "message": "UDP Scan"}
-}
+    def __init__(self, scan_threshold = 300, scan_window = 30):
+        self.GENERIC_SCAN_THRESHOLD = scan_threshold
+        self.WINDOW = scan_window
 
-GENERIC_SCAN_THRESHOLD = 300
+    def detect_port_scan(self, src_ip, dst_ip, event_type):
+        ports = get_unique_ports(src_ip, self.WINDOW)
+        half_open = get_half_open_tcp(src_ip)
 
-def detect_port_scan(src_ip, dst_ip, event_type):
-    
-    ports = get_unique_ports(src_ip, 30)
-    half_open = get_half_open_tcp(src_ip)
+        if event_type in self.SCAN_RULES:
+            port_threshold = self.SCAN_RULES[event_type]["ports"]
+            message = self.SCAN_RULES[event_type]["message"]
+            required_half_open = self.SCAN_RULES[event_type]["half_open"]
 
-    if event_type in SCAN_RULES:
-        port_threshold = SCAN_RULES[event_type]["ports"]
-        message = SCAN_RULES[event_type]["message"]
-        required_half_open = SCAN_RULES[event_type]["half_open"]
-
-        if ports >= port_threshold and (required_half_open is None or half_open >= required_half_open):
-            if not attack_state[src_ip][message]:
-                attack_state[src_ip][message] = True
-                alert(src_ip, dst_ip, event_type, message)
-                return True 
+            if ports >= port_threshold and (required_half_open is None or half_open >= required_half_open):
+                if not attack_state[src_ip][message]:
+                    attack_state[src_ip][message] = True
+                    alert(src_ip, dst_ip, event_type, message)
+                    return True 
+            else:
+                attack_state[src_ip][message] = False
+        elif ports >= self.GENERIC_SCAN_THRESHOLD:
+            if not attack_state[src_ip]["Port Scan"]:
+                    attack_state[src_ip]["Port Scan"] = True
+                    alert(src_ip, dst_ip, "", "Port Scan")
+                    return True
         else:
-            attack_state[src_ip][message] = False
-    elif ports >= GENERIC_SCAN_THRESHOLD:
-        if not attack_state[src_ip]["Port Scan"]:
-                attack_state[src_ip]["Port Scan"] = True
-                alert(src_ip, dst_ip, "", "Port Scan")
-                return True
-    else:
-        attack_state[src_ip]["Port Scan"] = False
+            attack_state[src_ip]["Port Scan"] = False
+            return False
+
+    def add_rule(self, event_type, port_threshold, half_open = None, message = None):
+        if event_type in self.SCAN_RULES:
+            return False
+        else:
+            self.SCAN_RULES[event_type] = {"ports": port_threshold, "half_open": half_open, "message": message if message else event_type}
+            return True
+    
+    def delete_rule(self, event_type):
+        return self.SCAN_RULES.pop(event_type, None)
+    
+    def edit_rule(self, event_type, port_threshold, half_open = None, message = None):
+        if event_type in self.SCAN_RULES:
+            self.SCAN_RULES[event_type] = {"ports": port_threshold, "half_open": half_open, "message": message if message else event_type}
+            return True
         return False
+    
+    def change_default_threshold(self, new_threshold):
+        self.GENERIC_SCAN_THRESHOLD = new_threshold
+
+    def change_default_window(self, new_window):
+        self.WINDOW = new_window

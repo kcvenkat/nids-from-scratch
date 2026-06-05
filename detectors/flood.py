@@ -1,32 +1,51 @@
-from .utils import tracker, get_window_count, attack_state
+from .utils import tracker, get_window_count, attack_state, unique_ports_dst
 from server.alert import alert
 import time
 
-#rules for flood detection. 
-WINDOW = 5
+class FloodDetector:
+    FLOOD_RULES = {
+        #event_type: max packets allowed per window, name of flood
+        "ICMP:8": {"threshold": 500, "message": "ICMP Echo Flood"},
+        "TCP:S": {"threshold": 1000, "message": "TCP SYN Flood"},
+        "UDP": {"threshold": 2000, "message": "UDP Flood"},
+    }
 
-FLOOD_RULES = {
-    #event_type: max packets allowed per window, name of flood
-    "ICMP:8": {"threshold": 500, "message": "ICMP Echo Flood"},
-    "TCP:S": {"threshold": 1000, "message": "TCP SYN Flood"},
-    "UDP": {"threshold": 2000, "message": "UDP Flood"},
-}
+    def __init__(self, flood_window = 5):
+        self.WINDOW = flood_window
 
-def detect_flood(src_ip, dst_ip, event_type):
-    if attack_state[src_ip]["TCP SYN Scan"]:
+    def detect_flood(self, src_ip, dst_ip, event_type):
+        if unique_ports_dst(src_ip, dst_ip, self.WINDOW) >= 3:
+            return False
+        if event_type not in self.FLOOD_RULES:
+            return False
+        count = get_window_count(src_ip, event_type, self.WINDOW)
+        threshold = self.FLOOD_RULES[event_type]["threshold"]
+        message = self.FLOOD_RULES[event_type]["message"]
+        if count > threshold:
+            if not attack_state[src_ip][message]:
+                attack_state[src_ip][message] = True
+                alert(src_ip, dst_ip, event_type, message)
+                return True
+        else:
+            attack_state[src_ip][message] = False
         return False
-    if event_type not in FLOOD_RULES:
-        return False
-    tracker[src_ip][event_type].append(time.time())
-    count = get_window_count(src_ip, event_type, WINDOW)
-    threshold = FLOOD_RULES[event_type]["threshold"]
-    message = FLOOD_RULES[event_type]["message"]
-    if count > threshold:
-        if not attack_state[src_ip][message]:
-            attack_state[src_ip][message] = True
-            alert(src_ip, dst_ip, event_type, message)
+    
+    def add_rule(self, event_type, packet_threshold, message = None):
+        if event_type in self.FLOOD_RULES:
+            return False
+        else:
+            self.FLOOD_RULES[event_type] = {"threshold": packet_threshold, "message": message if message else event_type}
             return True
-    else:
-        attack_state[src_ip][message] = False
-    return False
+    
+    def delete_rule(self, event_type):
+        return self.FLOOD_RULES.pop(event_type, None)
+    
+    def edit_rule(self, event_type, packet_threshold, message = None):
+        if event_type in self.FLOOD_RULES:
+            self.FLOOD_RULES[event_type] = {"threshold": packet_threshold, "message": message if message else event_type}
+            return True
+        return False
+    
+    def change_default_window(self, new_window):
+        self.WINDOW = new_window
     

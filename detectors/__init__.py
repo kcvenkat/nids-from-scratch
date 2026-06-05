@@ -1,4 +1,6 @@
-from .flood import detect_flood
-from .scan import detect_port_scan
+from .flood import FloodDetector
+from .scan import ScanDetector
 
-DETECTORS = [detect_port_scan, detect_flood]
+_scanner = ScanDetector()
+_fl_det = Flood_Detector
+DETECTORS = [_scanner.detect_port_scan, detect_flood]
