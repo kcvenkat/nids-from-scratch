@@ -32,7 +32,7 @@ class ScanDetector:
                     return True 
             else:
                 attack_state[src_ip][message] = False
-        elif ports >= self.GENERIC_SCAN_THRESHOLD:
+        elif ports >= self.GENERIC_SCAN_THRESHOLD and event_type not in self.SCAN_RULES:
             if not attack_state[src_ip]["Port Scan"]:
                     attack_state[src_ip]["Port Scan"] = True
                     alert(src_ip, dst_ip, "", "Port Scan")
