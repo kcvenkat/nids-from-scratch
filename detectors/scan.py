@@ -1,4 +1,4 @@
-from .utils import get_half_open_tcp, get_unique_ports, attack_state
+from .utils import get_half_open_tcp, get_unique_ports, attack_state, get_unique_hosts
 from server.alert import alert
 class ScanDetector:
     SCAN_RULES = {
@@ -47,7 +47,7 @@ class ScanDetector:
         else:
             self.SCAN_RULES[event_type] = {"ports": port_threshold, "half_open": half_open, "message": message if message else event_type}
             return True
-    
+        
     def delete_rule(self, event_type):
         return self.SCAN_RULES.pop(event_type, None)
     
