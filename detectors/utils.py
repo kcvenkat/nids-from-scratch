@@ -3,7 +3,7 @@ import time
 
 tracker = defaultdict(lambda: defaultdict(deque))
 attack_state = defaultdict(lambda: defaultdict(bool))
-port_tracker = defaultdict(lambda: defaultdict(lambda: defaultdict(deque)))
+port_tracker = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(deque))))
 host_tracker = defaultdict(dict)
 tcp_connection_tracker = {}
 
@@ -17,13 +17,13 @@ def get_window_count(src_ip, protocol, window):
     return len(timestamps)
 
 #unique ports overall
-def get_unique_ports(src_ip, window):
+def get_unique_ports(src_ip, event_type, window):
     now = time.time()
 
     ports_hit = 0
     
     for dst_ip in port_tracker[src_ip]:
-        for port, timestamps in port_tracker[src_ip][dst_ip].items():
+        for port, timestamps in port_tracker[src_ip][dst_ip][event_type].items():
             while timestamps and now - timestamps[0] > window:
                 timestamps.popleft()
             if timestamps:
@@ -32,11 +32,11 @@ def get_unique_ports(src_ip, window):
     return ports_hit
 
 #unique ports on a dst_ip
-def unique_ports_dst(src_ip, dst_ip, window):
+def unique_ports_dst(src_ip, dst_ip, event_type, window):
     now = time.time()
     ports_hit = 0
 
-    for port, timestamps in port_tracker[src_ip][dst_ip].items():
+    for port, timestamps in port_tracker[src_ip][dst_ip][event_type].items():
         while timestamps and now - timestamps[0] > window:
             timestamps.popleft()
         if timestamps:
@@ -59,8 +59,8 @@ def traffic_per_second(src_ip, event_type, window):
 def record_packet(src_ip, protocol):
     tracker[src_ip][protocol].append(time.time())
 
-def record_port(src_ip, dst_ip, dst_port):
-    port_tracker[src_ip][dst_ip][dst_port].append(time.time())
+def record_port(src_ip, dst_ip, event_type, dst_port):
+    port_tracker[src_ip][dst_ip][event_type][dst_port].append(time.time())
 
 def record_unique_host(src_ip, dst_ip):
     host_tracker[src_ip][dst_ip] = time.time()

@@ -18,7 +18,7 @@ class PortScanDetector:
         self.WINDOW = scan_window
 
     def detect(self, src_ip, dst_ip, event_type):    
-        ports = get_unique_ports(src_ip, self.WINDOW)
+        ports = get_unique_ports(src_ip, event_type, self.WINDOW)
         half_open = get_half_open_tcp(src_ip)
 
         #TODO: Better solution than port scan disabling
@@ -47,7 +47,7 @@ class PortScanDetector:
                 attack_state[src_ip][message] = True
                 alert(src_ip, dst_ip, event_type, message)
                 return True 
-        elif ports < self.LOWER_PORT_THRESHOLD:
+        else:
             attack_state[src_ip][message] = False
         return False
 

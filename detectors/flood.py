@@ -14,7 +14,7 @@ class FloodDetector:
         self.WINDOW = flood_window
 
     def detect_flood(self, src_ip, dst_ip, event_type):
-        if unique_ports_dst(src_ip, dst_ip, self.WINDOW) >= 3:
+        if unique_ports_dst(src_ip, dst_ip, event_type, self.WINDOW) >= 3:
             return False
         if event_type not in self.FLOOD_RULES:
             return False
