@@ -9,7 +9,7 @@ class PortScanDetector:
         "TCP:F": {"ports": 300, "half_open": None, "message": "FIN Scan"},
         "TCP:A": {"ports": 300, "half_open": None, "message": "ACK Scan"},
         "TCP:FA": {"ports": 50, "half_open": None, "message": "Maimon Scan"},
-        "UDP": {"ports": 100, "half_open": None, "message": "UDP Scan"}
+        "UDP": {"ports": 300, "half_open": None, "message": "UDP Scan"}
     }
 
     def __init__(self, scan_threshold = 300, scan_window = 30, lower_port_threshold = 20):
@@ -45,10 +45,26 @@ class PortScanDetector:
         if ports >= port_threshold and (required_half_open is None or half_open >= required_half_open):
             if not attack_state[src_ip][message]:
                 attack_state[src_ip][message] = True
+                print(
+                    "ALERT",
+                    src_ip,
+                    dst_ip,
+                    event_type,
+                    message,
+                    ports
+                )
                 alert(src_ip, dst_ip, event_type, message)
                 return True 
-        else:
-            attack_state[src_ip][message] = False
+        if attack_state[src_ip][message]:
+            if ports < self.LOWER_PORT_THRESHOLD:
+                print(
+                    "RESET",
+                    src_ip,
+                    event_type,
+                    message,
+                    ports
+                )
+                attack_state[src_ip][message] = False
         return False
 
     def add_rule(self, event_type, port_threshold, half_open = None, message = None):
