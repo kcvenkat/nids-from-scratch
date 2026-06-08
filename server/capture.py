@@ -1,4 +1,4 @@
-from scapy.all import PcapWriter, IP, ICMP, UDP, TCP #type: ignore
+from scapy.all import PcapWriter, IP, ICMP, UDP, TCP, ARP #type: ignore
 from datetime import datetime, timezone
 import os
 from detectors.utils import *
@@ -13,7 +13,14 @@ def print_formatted(pkt):
     tz=timezone.utc
     ).strftime("%Y-%m-%d %H:%M:%S.%f")
 
-    if IP in pkt:
+    if ARP in pkt:
+        event_type = f"ARP:{pkt[ARP].op}"
+        src_ip = pkt[ARP].psrc
+        dst_ip = pkt[ARP].pdst
+        src_port = "-"
+        dst_port = "-"
+        
+    elif IP in pkt:
         src_ip = pkt[IP].src
         dst_ip = pkt[IP].dst
 
@@ -50,13 +57,15 @@ def print_formatted(pkt):
             src_port = "-"
             dst_port = "-"
             return
+    else:
+        return
             
-        print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
-        record_packet(src_ip, event_type)
+    print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
+    record_packet(src_ip, event_type)
         
-        for detector in DETECTORS:
-            if detector(src_ip, dst_ip, event_type):
-                return
+    for detector in DETECTORS:
+        if detector(src_ip, dst_ip, event_type):
+            return
 
 def print_tracker():
     print("\n" + "="*60)
