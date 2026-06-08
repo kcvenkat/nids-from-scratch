@@ -92,7 +92,8 @@ class PortScanDetector:
 class HostScanDetector:
     HOST_SCAN_RULES = {
         #event_type: hosts, ping sweep
-        "ICMP:8":  {"hosts": 10, "message": "Ping Sweep"},
+        "ARP:1": {"hosts": 20, "message": "ARP Ping Sweep"},
+        "ICMP:8":  {"hosts": 10, "message": "ICMP Ping Sweep"},
         "ICMP:13": {"hosts": 10, "message": "ICMP Timestamp Sweep"},
         "ICMP:17": {"hosts": 10, "message": "ICMP Netmask Sweep"},
         "ICMP:5":  {"hosts": 5,  "message": "ICMP Redirect Attack"},

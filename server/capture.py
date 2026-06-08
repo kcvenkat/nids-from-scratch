@@ -19,7 +19,7 @@ def print_formatted(pkt):
         dst_ip = pkt[ARP].pdst
         src_port = "-"
         dst_port = "-"
-        
+
     elif IP in pkt:
         src_ip = pkt[IP].src
         dst_ip = pkt[IP].dst
@@ -62,7 +62,8 @@ def print_formatted(pkt):
             
     print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
     record_packet(src_ip, event_type)
-        
+    record_unique_host(src_ip, dst_ip)
+    
     for detector in DETECTORS:
         if detector(src_ip, dst_ip, event_type):
             return
