@@ -1,5 +1,5 @@
 #Functions to gather the data necessary to match with options
-from detectors.utils import get_unique_ports, get_unique_hosts, get_window_count,  
+from detectors.utils import get_unique_ports, get_unique_hosts, get_window_count 
 def evaluate_threshold(rule, event):
 
     track = rule.options["track"]
