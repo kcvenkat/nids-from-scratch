@@ -12,4 +12,3 @@ class Rule:
     options: dict = field(default_factory=dict)
 
 RULES = []
-    
