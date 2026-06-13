@@ -1,5 +1,5 @@
 from .utils import get_window_count, attack_state, unique_ports_dst, get_unique_hosts
-from server.alert import alert
+from server.actions.alert import alert
 import time
 
 class FloodDetector:

@@ -1,5 +1,5 @@
 from .utils import get_half_open_tcp, get_unique_ports, attack_state, get_unique_hosts
-from server.alert import alert
+from server.actions.alert import alert
 class PortScanDetector:
     PORT_SCAN_RULES = {
         #event_type: {port threshold, half open connections allowed, message}
