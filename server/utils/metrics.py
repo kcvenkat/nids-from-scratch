@@ -13,6 +13,6 @@ def evaluate_threshold(rule, event):
         ip = event.src_ip
     
     if threshold_type == "ports":
-        metric = 
+        metric = 3
 #TODO: Incomplete logic
     

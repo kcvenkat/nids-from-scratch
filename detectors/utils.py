@@ -3,53 +3,47 @@
 from collections import deque, defaultdict
 import time
 
-tracker = defaultdict(lambda: defaultdict(deque))
-port_tracker = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(deque))))
+tracker = {
+    "by_src": defaultdict(lambda: defaultdict(deque)),
+    "by_dst": defaultdict(lambda: defaultdict(deque))
+}
 port_tracker = {
     "by_src": defaultdict(lambda: defaultdict(lambda: defaultdict(deque))),
     "by_dst": defaultdict(lambda: defaultdict(lambda: defaultdict(deque)))
 }
-host_tracker = defaultdict(dict)
+host_tracker = {
+    "by_src": defaultdict(dict),
+    "by_dst": defaultdict(dict)
+}
 tcp_connection_tracker = {}
+flow_tracker
 
-def get_window_count(src_ip, protocol, window):
+def get_window_count(track, ip, event_type, window):
     now = time.time()
-    timestamps = tracker[src_ip][protocol]
-
-    while timestamps and now - timestamps[0] > window:
-        timestamps.popleft()
-
-    return len(timestamps)
+    return sum(1 for ts in tracker[track][ip][event_type] if now - ts <= window)
 
 #unique ports overall
-def get_unique_ports(src_ip, event_type, window):
+def get_unique_ports(track, ip, event_type, window):
     now = time.time()
+    return sum(1 for timestamps in port_tracker [track][ip][event_type].values() if any(now - ts <= window for ts in timestamps))
 
-    ports_hit = 0
-    
-    for dst_ip in port_tracker[src_ip]:
-        for port, timestamps in port_tracker[src_ip][dst_ip][event_type].items():
-            while timestamps and now - timestamps[0] > window:
-                timestamps.popleft()
-            if timestamps:
-                ports_hit += 1
-
-    return ports_hit
-
-def get_unique_hosts(src_ip, window):
+def get_unique_hosts(track, ip, window):
     now = time.time()
+    return sum(1 for last_seen in host_tracker[track][ip].values() if now - last_seen <=window)
 
-    return sum(1 for last_seen in host_tracker[src_ip].values() if now - last_seen <=window)
+def record_packet(src_ip, dst_ip, event_type ):
+    tracker["by_src"][src_ip][event_type].append(time.time())
+    tracker["by_dst"][dst_ip][event_type].append(time.time())
 
-def record_packet(src_ip, protocol ):
-    tracker[src_ip][protocol].append(time.time())
-
-def record_port(src_ip, dst_ip, src_port, dst_port, event_type):
-    port_tracker["by_src"][src_ip][event_type][src_port].append(time.time())
+def record_port(src_ip, dst_ip, dst_port, event_type):
+    port_tracker["by_src"][src_ip][event_type][dst_port].append(time.time())
     port_tracker["by_dst"][dst_ip][event_type][dst_port].append(time.time())
 
 def record_unique_host(src_ip, dst_ip):
-    host_tracker[src_ip][dst_ip] = time.time()
+    now = time.time()
+
+    host_tracker["by_src"][src_ip][dst_ip] = now
+    host_tracker["by_dst"][dst_ip][src_ip] = now
 
 def record_tcp(src_ip, src_port, dst_ip, dst_port):
     conn = (src_ip, src_port, dst_ip, dst_port)
@@ -84,7 +78,6 @@ def set_ack(conn):
     if state["syn"] and state["syn_ack"] and not state["ack"]:
         state["ack"] = True
         tcp_connection_tracker[conn]["last_seen"] = time.time()
-        print("connection established")
 
 def is_half_open(conn):
     if conn not in tcp_connection_tracker:
@@ -94,13 +87,23 @@ def is_half_open(conn):
 
     return state["syn"] and not state["ack"]
 
-def get_half_open_tcp(src_ip):
+def is_established(conn):
+    if conn not in tcp_connection_tracker:
+        return False
+    
+    state = tcp_connection_tracker[conn]
+
+    return state["syn"] and state["syn ack"] and state["ack"]
+
+def get_half_open_tcp(track, ip):
     count = 0
 
     for conn in tcp_connection_tracker:
-        ip = conn[0]
-
-        if ip != src_ip:
+        if track == "by_dst":
+            conn_ip = conn[2]
+        else:
+            conn_ip = conn[0] 
+        if conn_ip != ip:
             continue
 
         if is_half_open(conn):
