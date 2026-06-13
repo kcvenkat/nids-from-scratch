@@ -16,7 +16,7 @@ host_tracker = {
     "by_dst": defaultdict(dict)
 }
 tcp_connection_tracker = {}
-flow_tracker
+flow_tracker = {}
 
 def get_window_count(track, ip, event_type, window):
     now = time.time()
