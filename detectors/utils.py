@@ -16,7 +16,6 @@ host_tracker = {
     "by_dst": defaultdict(dict)
 }
 tcp_connection_tracker = {}
-flow_tracker = {}
 
 def get_window_count(track, ip, event_type, window):
     now = time.time()
@@ -50,50 +49,94 @@ def record_tcp(src_ip, src_port, dst_ip, dst_port):
 
     if conn not in tcp_connection_tracker:
         tcp_connection_tracker[conn] = {
+            "client": src_ip,
+            "cport": src_port,
+
+            "server": dst_ip,
+            "sport": dst_port,
+
             "syn": True,
             "syn_ack": False,
             "ack": False,
             "last_seen": time.time()
         }
+
 def reverse_conn(conn):
     src_ip, src_port, dst_ip, dst_port = conn
     return (dst_ip, dst_port, src_ip, src_port)
 
-def set_synack(conn):
-    if conn not in tcp_connection_tracker:
-        return
+def get_conn_state(conn):
+    if conn in tcp_connection_tracker:
+        return tcp_connection_tracker[conn]
     
-    state = tcp_connection_tracker[conn]
+    reverse = reverse_conn(conn)
+
+    if reverse in tcp_connection_tracker:
+        return tcp_connection_tracker[reverse]
+    
+    return None
+
+def set_synack(conn):
+    state = get_conn_state(conn)
+
+    if state is None:
+        return
 
     if state["syn"]:
-        tcp_connection_tracker[conn]["syn_ack"] = True
-        tcp_connection_tracker[conn]["last_seen"] = time.time()
+        state["syn_ack"] = True
+        state["last_seen"] = time.time()
 
 def set_ack(conn):
-    if conn not in tcp_connection_tracker:
-        return
+    state = get_conn_state(conn)
 
-    state = tcp_connection_tracker[conn]
+    if state is None:
+        return
 
     if state["syn"] and state["syn_ack"] and not state["ack"]:
         state["ack"] = True
-        tcp_connection_tracker[conn]["last_seen"] = time.time()
+        state["last_seen"] = time.time()
 
 def is_half_open(conn):
-    if conn not in tcp_connection_tracker:
+    state = get_conn_state(conn)
+
+    if state is None:
         return False
     
-    state = tcp_connection_tracker[conn]
-
     return state["syn"] and not state["ack"]
 
 def is_established(conn):
-    if conn not in tcp_connection_tracker:
-        return False
-    
-    state = tcp_connection_tracker[conn]
+    state = get_conn_state(conn)
 
-    return state["syn"] and state["syn ack"] and state["ack"]
+    if state is None:
+        return False
+
+    return state["syn"] and state["syn_ack"] and state["ack"]
+
+def get_client(conn):
+    state = get_conn_state(conn)
+
+    return state["client"] if state else None
+
+def get_server(conn):
+    state = get_conn_state(conn)
+
+    return state["server"] if state else None
+
+def is_to_client(conn, event):
+    state = get_conn_state(conn)
+
+    if state is None:
+        return False
+
+    return (event.src_ip == state["server"] and event.dst_ip == state["client"])
+
+def is_to_server(conn, event):
+    state = get_conn_state(conn)
+
+    if state is None:
+        return False
+
+    return (event.src_ip == state["client"] and event.dst_ip == state["server"])
 
 def get_half_open_tcp(track, ip):
     count = 0

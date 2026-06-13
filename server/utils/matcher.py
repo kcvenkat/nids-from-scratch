@@ -1,3 +1,4 @@
+from detectors.utils import is_established, is_half_open, is_to_client, is_to_server
 #Functions to detect if a rule matches a packet  
 def matches_protocol(rule, event):
     return rule.protocol.lower() == event.protocol.lower()
@@ -31,6 +32,30 @@ def matches_icmp_type(rule, event):
 
 def matches_arp_op(rule, event):
     return rule.arp_op == event.arp_op
+
+def matches_flow(rule, event):
+    if "flow" not in rule.options:
+        return True
+    
+    flow = rule.options["flow"]
+
+    conn = event.conn
+
+    if conn is None:
+        return False
+    
+    if flow == "stateless":
+        return True
+    if flow == "established":
+        return is_established(conn)
+    elif flow == "half_open":
+        return is_half_open(conn)
+    elif flow == "to_server":
+        return is_to_server(conn, event)
+    elif flow == "to_client":
+        return is_to_client(conn, event)
+    
+    return False
 
 def matches_options(rule, event):
     if "flags" in rule.options:
