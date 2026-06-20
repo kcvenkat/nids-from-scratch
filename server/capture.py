@@ -3,66 +3,93 @@ from datetime import datetime, timezone
 from .event import Event
 import os
 from detectors.utils import *
+from event import Event
 
 MAX_FILES = 48
 ROTATE_INTERVAL = 1800
 
 def print_formatted(pkt):
+    timestamp = time.time()
     pkt_time = datetime.fromtimestamp(
     pkt.time,
     tz=timezone.utc
     ).strftime("%Y-%m-%d %H:%M:%S.%f")
+    timestamp = time.time()
+
+    protocol = None
+    event_type = None
+
+    src_port = None
+    dst_port = None
+
+    flags = None
+    icmp_type = None
+    arp_op = None
 
     if ARP in pkt:
-        event_type = f"ARP:{pkt[ARP].op}"
+        protocol = "ARP"
+
         src_ip = pkt[ARP].psrc
         dst_ip = pkt[ARP].pdst
-        src_port = "-"
-        dst_port = "-"
+
+        arp_op = pkt[ARP].op
+        event_type = f"ARP:{arp_op}"
 
     elif IP in pkt:
+
         src_ip = pkt[IP].src
         dst_ip = pkt[IP].dst
 
-        event_type = pkt[IP].proto
-
         if ICMP in pkt:
-            event_type = f"ICMP:{pkt[ICMP].type}"
-            src_port = "-"
-            dst_port = "-"
+            protocol = "ICMP"
+
+            icmp_type = pkt[ICMP].type
+            event_type = f"ICMP:{icmp_type}"
+
         elif TCP in pkt:
-            event_type = f"TCP:{pkt[TCP].flags}"
+            protocol = "TCP"
+
+            flags = str(pkt[TCP].flags)
+
             src_port = pkt[TCP].sport
             dst_port = pkt[TCP].dport
-            
-            conn = (src_ip, src_port, dst_ip, dst_port)
-            record_port(src_ip, dst_ip, event_type, dst_port)
-            
-            if event_type == "TCP:S":
-                record_tcp(src_ip, src_port, dst_ip, dst_port)
-            elif event_type == "TCP:SA":
-                conn = reverse_conn(conn)
-                if conn in tcp_connection_tracker:
-                    set_synack(conn)
-            elif event_type == "TCP:A":
-                if conn in tcp_connection_tracker:
-                    set_ack(conn)
+
+            event_type = f"TCP:{flags}"
+
         elif UDP in pkt:
-            event_type = "UDP"
+            protocol = "UDP"
+
             src_port = pkt[UDP].sport
             dst_port = pkt[UDP].dport
 
-            record_port(src_ip, dst_ip, event_type, dst_port)
+            event_type = "UDP"
+
         else:
-            src_port = "-"
-            dst_port = "-"
             return
+
     else:
         return
-            
+                
     print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
     record_packet(src_ip, dst_ip, event_type)
     record_unique_host(src_ip, dst_ip)
+
+    event = Event(
+        timestamp=timestamp,
+
+        protocol=protocol,
+        event_type=event_type,
+
+        src_ip=src_ip,
+        dst_ip=dst_ip,
+
+        src_port=src_port,
+        dst_port=dst_port,
+
+        flags=flags,
+        icmp_type=icmp_type,
+        arp_op=arp_op
+    )
 
 def print_tracker():
     print("\n" + "="*60)

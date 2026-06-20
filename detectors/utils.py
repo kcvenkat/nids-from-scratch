@@ -31,7 +31,7 @@ def get_unique_hosts(track, ip, window):
     now = time.time()
     return sum(1 for last_seen in host_tracker[track][ip].values() if now - last_seen <=window)
 
-def record_packet(src_ip, dst_ip, event_type ):
+def record_packet(src_ip, dst_ip, event_type):
     tracker["by_src"][src_ip][event_type].append(time.time())
     tracker["by_dst"][dst_ip][event_type].append(time.time())
 

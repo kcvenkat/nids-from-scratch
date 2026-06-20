@@ -6,6 +6,7 @@ class Event:
     protocol: str
     src_ip: str
     dst_ip: str
+    event_type: str
     src_port: str | None = None
     dst_port: str | None = None
     flags: str | None = None
