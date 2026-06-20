@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from .event import Event
 import os
 from detectors.utils import *
-from detectors import DETECTORS
 
 MAX_FILES = 48
 ROTATE_INTERVAL = 1800
@@ -62,12 +61,8 @@ def print_formatted(pkt):
         return
             
     print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
-    record_packet(src_ip, event_type)
+    record_packet(src_ip, dst_ip, event_type)
     record_unique_host(src_ip, dst_ip)
-    
-    for detector in DETECTORS:
-        if detector(src_ip, dst_ip, event_type):
-            return
 
 def print_tracker():
     print("\n" + "="*60)

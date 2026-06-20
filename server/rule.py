@@ -9,6 +9,6 @@ class Rule:
     src_port: str
     dst_ip: str
     dst_port:str
-    options: dict = field(default_factory=dict)
+    options: dict[str, str] | None = None
 
-RULES = []
+RULE_OBJECTS = []

@@ -2,6 +2,7 @@
 
 from collections import deque, defaultdict
 import time
+from server.rule import RULE_OBJECTS
 
 tracker = {
     "by_src": defaultdict(lambda: defaultdict(deque)),
@@ -154,3 +155,11 @@ def get_half_open_tcp(track, ip):
 
     return count
     
+def get_available_sid():
+    highest_sid = 0
+    for rule in RULE_OBJECTS:
+        if highest_sid < rule.sid:
+            highest_sid = rule.sid
+    
+    return highest_sid + 1
+        
