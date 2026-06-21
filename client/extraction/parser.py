@@ -1,6 +1,6 @@
 #allow 192.168.0.110 20 -> 192.168.0.1 80 (flags: S; track: by_src; count: 200; flow: to_server; threshold_type: port; msg: "TCP SYN Flood")
 from detectors.utils import get_available_sid
-from server.rule import Rule
+from server.detection.rule import Rule
 
 class Parser:
     def __init__(self, rule_string):
@@ -67,21 +67,8 @@ class Parser:
             sid = options["sid"]
 
         return sid, header, options
-
-rule_text = '''
-alert tcp any any -> 192.168.0.1 80 (
-    flags:S;
-    track:by_src;
-    count:200;
-    flow:to_server;
-    threshold_type:ports;
-    msg:TCP SYN Flood;
-)
-'''
-
-parser = Parser(rule_text)
-
-sid, (action, protocol, src_ip, src_port, dst_ip, dst_port), options = parser.rule_parameters()
-
-rule = Rule(sid, action, protocol, src_ip, src_port, dst_ip, dst_port, options)
+    
+    def parse(self):
+        sid, (action, protocol, src_ip, src_port, dst_ip, dst_port), options = self.rule_parameters()
+        return Rule(sid, action, protocol, src_ip, src_port, dst_ip, dst_port, options)
 

@@ -4,6 +4,8 @@ from .event import Event
 import os
 from detectors.utils import *
 from event import Event
+from server.detection.rule import RULE_OBJECTS
+from server.utils.perform import perform_action
 
 MAX_FILES = 48
 ROTATE_INTERVAL = 1800
@@ -90,6 +92,9 @@ def print_formatted(pkt):
         icmp_type=icmp_type,
         arp_op=arp_op
     )
+
+    for rule in RULE_OBJECTS:
+        perform_action(rule, event)
 
 def print_tracker():
     print("\n" + "="*60)

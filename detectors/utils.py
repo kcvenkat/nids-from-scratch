@@ -2,7 +2,7 @@
 
 from collections import deque, defaultdict
 import time
-from server.rule import RULE_OBJECTS
+from server.detection.rule import RULE_OBJECTS
 
 tracker = {
     "by_src": defaultdict(lambda: defaultdict(deque)),

@@ -3,8 +3,9 @@
 from scapy.all import sniff
 import struct
 import socket
+from client.extraction.loader import load_rules
 
-SERVER = "172.16.109.129"
+SERVER = "172.16.109.130"
 PORT = 5000
 IFACE = "en0"
 
@@ -23,6 +24,7 @@ def detect(pkt):
         print("ERROR:", e)
 
 try:
+    load_rules()
     sniff(iface = IFACE, prn= detect, store = False)
 except KeyboardInterrupt:
     print("Stopping capture...")
