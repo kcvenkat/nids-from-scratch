@@ -1,9 +1,8 @@
 from scapy.all import PcapWriter, IP, ICMP, UDP, TCP, ARP #type: ignore
 from datetime import datetime, timezone
-from .event import Event
 import os
 from detectors.utils import *
-from event import Event
+from server.event import Event
 from server.detection.rule import RULE_OBJECTS
 from server.utils.perform import perform_action
 
