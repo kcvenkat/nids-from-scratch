@@ -4,18 +4,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-LOG_FILE = PROJECT_ROOT / "log.json"
+LOG_FILE = PROJECT_ROOT / "log.jsonl"
 
 def log(rule, event):
+    track = rule.options.get("track", "by_src")
+    message = rule.options.get("msg", event.event_type)
+    
     event_log = {
         "id": str(uuid.uuid4())[:8],
         "timestamp": datetime.now(tz=timezone.utc).isoformat(),
         "src_ip": event.src_ip,
         "dst_ip": event.dst_ip,
         "event_type": event.event_type,
-        "log_msg": rule.msg,
-         "msg": f"{rule.msg} targeting {event.dst_ip}" if rule.options["track"] == "by_dst" else f"{rule.msg} detected from {event.src_ip}"
+        "log_msg": message,
+        "msg": f"{message} targeting {event.dst_ip}" if track == "by_dst" else f"{message} detected from {event.src_ip}"
     }
 
-    with open(LOG_FILE, "a") as f:
+    with LOG_FILE.open("a") as f:
         f.write(json.dumps(event_log) + "\n")
