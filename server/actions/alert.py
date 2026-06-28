@@ -1,6 +1,10 @@
 import uuid
 import json
 from datetime import datetime, timezone
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+ALERT_FILE = PROJECT_ROOT / "alert.json"
 
 def alert(rule, event):
     track = rule.options.get("track", "by_src")
@@ -16,5 +20,5 @@ def alert(rule, event):
         "msg": f"{message} targeting {event.dst_ip}" if track == "by_dst" else f"{message} detected from {event.src_ip}"
     }
 
-    with open("alerts.json", "a") as f:
+    with open(ALERT_FILE, "a") as f:
         f.write(json.dumps(alert_log) + "\n")

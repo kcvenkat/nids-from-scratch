@@ -1,6 +1,10 @@
 import uuid
 import json
 from datetime import datetime, timezone
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+LOG_FILE = PROJECT_ROOT / "log.json"
 
 def log(rule, event):
     event_log = {
@@ -13,5 +17,5 @@ def log(rule, event):
          "msg": f"{rule.msg} targeting {event.dst_ip}" if rule.options["track"] == "by_dst" else f"{rule.msg} detected from {event.src_ip}"
     }
 
-    with open("event_logs.json", "a") as f:
+    with open(LOG_FILE, "a") as f:
         f.write(json.dumps(event_log) + "\n")
