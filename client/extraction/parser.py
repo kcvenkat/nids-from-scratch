@@ -1,4 +1,3 @@
-#allow 192.168.0.110 20 -> 192.168.0.1 80 (flags: S; track: by_src; count: 200; flow: to_server; threshold_type: port; msg: "TCP SYN Flood")
 from detectors.utils import get_available_sid
 from server.detection.rule import Rule
 

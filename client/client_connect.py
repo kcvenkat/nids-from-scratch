@@ -4,7 +4,7 @@ import struct
 import socket
 from client.extraction.loader import load_rules
 
-SERVER = "172.16.109.130"
+SERVER = "172.16.109.129"
 PORT = 5000
 IFACE = "en0"
 
