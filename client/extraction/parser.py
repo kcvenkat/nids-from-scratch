@@ -32,24 +32,19 @@ class Parser:
     def process_options(self, options_string):
         if not options_string:
             return None
-        
-        clean_options = options_string.replace("(", "").replace(")", "")
 
-        option_list = [
-            option.strip()
-            for option in clean_options.split(";")
-            if option.strip()
-        ]
-
-        for index, option in enumerate(option_list):
-            option_list[index] = option.split(":")
-            option_list[index][0] = option_list[index][0].strip()
-            option_list[index][1] = option_list[index][1].strip()
+        clean_options = options_string.strip("()")
 
         option_dict = {}
 
-        for option in option_list:
-            option_dict[option[0]] = option[1]
+        for option in clean_options.split(";"):
+            option = option.strip()
+
+            if not option:
+                continue
+
+            key, value = option.split(":", 1)
+            option_dict[key.strip()] = value.strip().strip('"')
 
         return option_dict
 
