@@ -71,4 +71,3 @@ class Parser:
     def parse(self):
         sid, (action, protocol, src_ip, src_port, dst_ip, dst_port), options = self.rule_parameters()
         return Rule(sid, action, protocol, src_ip, src_port, dst_ip, dst_port, options)
-

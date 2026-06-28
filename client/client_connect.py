@@ -1,5 +1,4 @@
 #This script is to be run on the host to connect with the virtual machine for packet sniffing
-
 from scapy.all import sniff
 import struct
 import socket
