@@ -5,6 +5,7 @@ from detectors.utils import *
 from server.event import Event
 from server.detection.rule import RULE_OBJECTS
 from server.utils.perform import perform_action
+from client.extraction.loader import load_rules
 
 MAX_FILES = 48
 ROTATE_INTERVAL = 1800

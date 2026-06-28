@@ -27,6 +27,7 @@ def recv_exact(sock, size):
 
 conn = None
 writer = None
+load_rules()
 
 try:
     print("listening...")
