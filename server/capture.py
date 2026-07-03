@@ -1,10 +1,10 @@
 from scapy.all import PcapWriter, IP, ICMP, UDP, TCP, ARP #type: ignore
 from datetime import datetime, timezone
 import os
-from detectors.utils import *
+from server.stats.utils import *
 from server.event import Event
 from server.detection.rule import RULE_OBJECTS
-from server.utils.perform import perform_action
+from server.stats.perform import perform_action
 from client.extraction.loader import load_rules
 
 MAX_FILES = 48
