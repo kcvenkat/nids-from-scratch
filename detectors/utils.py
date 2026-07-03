@@ -162,13 +162,4 @@ def get_available_sid():
             highest_sid = rule.sid
     
     return highest_sid + 1
-
-
-def make_flow_key(event):
-    if event.src_ip is None or event.dst_ip is None or event.protocol.lower() is None:
-        return None
-    if event.src_port is None or event.dst_port is None:
-        return (event.src_ip, None, event.dst_ip, None, event.protocol.lower())
-
-    return (event.src_ip, event.src_port, event.dst_ip, event.dst_port, event.protocol.lower())
-
+        

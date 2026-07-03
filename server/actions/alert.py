@@ -9,6 +9,7 @@ ALERT_FILE = PROJECT_ROOT / "alert.jsonl"
 def alert(rule, event):
     track = rule.options.get("track", "by_src")
     message = rule.options.get("msg", event.event_type)
+
     alert_log = {
         "id": str(uuid.uuid4())[:8],
         "timestamp": datetime.now(tz=timezone.utc).isoformat(),
@@ -19,9 +20,5 @@ def alert(rule, event):
         "msg": f"{message} targeting {event.dst_ip}" if track == "by_dst" else f"{message} detected from {event.src_ip}"
     }
 
-    print(f"Writing alert for rule {rule.sid} to {ALERT_FILE}")
-    print()
-    print()
-    print()
     with ALERT_FILE.open("a") as f:
         f.write(json.dumps(alert_log) + "\n")
