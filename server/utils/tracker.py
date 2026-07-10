@@ -166,16 +166,23 @@ def get_available_sid():
 
 def log_attack_state(rule):
     attack_state[rule.sid] = time.time()
+    print(f"[DEBUG] initialized attack_state for rule_sid={rule.sid} at {attack_state[rule.sid]}")
+
 
 def should_alert(rule, threshold=10.0):
     now = time.time()
 
     if rule.sid not in attack_state:
         log_attack_state(rule)
+        print(f"[DEBUG] rule_sid={rule.sid} first alert; allowing")
         return True
 
-    if now - attack_state[rule.sid] >= threshold:
+    elapsed = now - attack_state[rule.sid]
+    print(f"[DEBUG] rule_sid={rule.sid} elapsed={elapsed:.3f}s threshold={threshold}s")
+
+    if elapsed >= threshold:
         attack_state.pop(rule.sid)
+        print(f"[DEBUG] rule_sid={rule.sid} threshold expired; allowing new alert")
         return True
 
     return False

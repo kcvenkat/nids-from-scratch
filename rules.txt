@@ -1,1 +1,1 @@
-alert tcp any any -> any any (flags: S; msg: "TEST: TCP SYN detected")
+alert tcp any any -> any any (flags: S; track: by_src; threshold_type: count; count: 10; time_frame: 5; msg: "SYN Scan detected")

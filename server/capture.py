@@ -93,9 +93,7 @@ def print_formatted(pkt):
         arp_op=arp_op
     )
 
-    print(f"RULE_OBJECTS contains {len(RULE_OBJECTS)} rules")
     for rule in RULE_OBJECTS:
-        print(f"Checking {len(RULE_OBJECTS)} rules against {event.event_type}")
         perform_action(rule, event)
 
 def print_tracker():

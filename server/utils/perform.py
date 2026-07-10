@@ -6,11 +6,15 @@ from server.utils.tracker import should_alert
 def perform_action(rule, event):
     if not match_rule(rule, event):
         return
-    
-    threshold = rule.options.get("threshold", 10) if rule.options else 10.0
+
+    options = rule.options or {}
+    threshold = options.get("suppress_threshold", 10)
     threshold = float(threshold)
 
+    print(f"[DEBUG] rule_sid={rule.sid} action={rule.action} threshold={threshold} event={event.event_type} src={event.src_ip} dst={event.dst_ip}")
+
     if not should_alert(rule, threshold):
+        print(f"[DEBUG] suppressing rule_sid={rule.sid} due to active suppression window")
         return
 
     if rule.action == "alert":
