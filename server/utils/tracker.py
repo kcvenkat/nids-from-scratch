@@ -17,6 +17,7 @@ host_tracker = {
     "by_dst": defaultdict(dict)
 }
 tcp_connection_tracker = {}
+attack_state = {}
 
 def get_window_count(track, ip, event_type, window):
     now = time.time()
@@ -162,4 +163,20 @@ def get_available_sid():
             highest_sid = rule.sid
     
     return highest_sid + 1
+
+def log_attack_state(rule):
+    attack_state[rule.sid] = time.time()
+
+def should_alert(rule, threshold=10.0):
+    now = time.time()
+
+    if rule.sid not in attack_state:
+        log_attack_state(rule)
+        return True
+
+    if now - attack_state[rule.sid] >= threshold:
+        attack_state.pop(rule.sid)
+        return True
+
+    return False
         

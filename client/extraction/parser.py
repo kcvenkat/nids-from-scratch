@@ -1,4 +1,4 @@
-from detectors.utils import get_available_sid
+from server.utils.tracker import get_available_sid
 from server.detection.rule import Rule
 
 class Parser:

@@ -1,4 +1,4 @@
-from detectors.utils import is_established, is_half_open, is_to_client, is_to_server
+from server.utils.tracker import is_established, is_half_open, is_to_client, is_to_server
 from server.utils.metrics import evaluate_threshold
 #Functions to detect if a rule matches a packet  
 def matches_protocol(rule, event):

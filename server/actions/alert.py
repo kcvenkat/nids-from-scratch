@@ -7,8 +7,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 ALERT_FILE = PROJECT_ROOT / "alert.jsonl"
 
 def alert(rule, event):
-    track = rule.options.get("track", "by_src")
-    message = rule.options.get("msg", event.event_type)
+    track = rule.options.get("track", "by_src") if rule.options else "by_src"
+    message = rule.options.get("msg", event.event_type) if rule.options else event.event_type
 
     alert_log = {
         "id": str(uuid.uuid4())[:8],
