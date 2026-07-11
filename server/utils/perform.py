@@ -13,7 +13,7 @@ def perform_action(rule, event):
 
     print(f"[DEBUG] rule_sid={rule.sid} action={rule.action} threshold={threshold} event={event.event_type} src={event.src_ip} dst={event.dst_ip}")
 
-    if not should_alert(rule, threshold):
+    if not should_alert(rule, event, threshold):
         print(f"[DEBUG] suppressing rule_sid={rule.sid} due to active suppression window")
         return
 

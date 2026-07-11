@@ -164,24 +164,40 @@ def get_available_sid():
     
     return highest_sid + 1
 
-def log_attack_state(rule):
-    attack_state[rule.sid] = time.time()
-    print(f"[DEBUG] initialized attack_state for rule_sid={rule.sid} at {attack_state[rule.sid]}")
+def log_attack_state(event):
+    connection_key = (
+        event.event_type,
+        event.src_ip,
+        event.src_port,
+        event.dst_ip,
+        event.dst_port,
+    )
+    attack_state[connection_key] = time.time()
 
 
-def should_alert(rule, threshold=10.0):
+def should_alert(rule, event, threshold=10.0):
     now = time.time()
+    connection_key = (
+        event.event_type,
+        event.src_ip,
+        event.src_port,
+        event.dst_ip,
+        event.dst_port,
+    )
+    has_state = connection_key in attack_state
 
-    if rule.sid not in attack_state:
-        log_attack_state(rule)
+    print(attack_state)
+
+    if not has_state:
+        log_attack_state(event)
         print(f"[DEBUG] rule_sid={rule.sid} first alert; allowing")
         return True
 
-    elapsed = now - attack_state[rule.sid]
+    elapsed = now - attack_state[connection_key]
     print(f"[DEBUG] rule_sid={rule.sid} elapsed={elapsed:.3f}s threshold={threshold}s")
 
     if elapsed >= threshold:
-        attack_state.pop(rule.sid)
+        attack_state.pop(connection_key)
         print(f"[DEBUG] rule_sid={rule.sid} threshold expired; allowing new alert")
         return True
 
