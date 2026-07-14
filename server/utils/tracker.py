@@ -164,32 +164,28 @@ def get_available_sid():
     
     return highest_sid + 1
 
-def log_attack_state(event):
-    connection_key = (
-        event.event_type,
-        event.src_ip,
-        event.src_port,
-        event.dst_ip,
-        event.dst_port,
-    )
+def build_attack_state_key(rule, event):
+    return tuple([rule.sid, event.protocol, event.src_ip, event.dst_ip])
+
+
+def log_attack_state(rule, event):
+    connection_key = build_attack_state_key(rule, event)
     attack_state[connection_key] = time.time()
 
 
 def should_alert(rule, event, threshold=10.0):
     now = time.time()
-    connection_key = (
-        event.event_type,
-        event.src_ip,
-        event.src_port,
-        event.dst_ip,
-        event.dst_port,
-    )
+    connection_key = build_attack_state_key(rule, event)
     has_state = connection_key in attack_state
+    last_seen = attack_state.get(connection_key)
 
-    print(attack_state)
+    print(
+        f"[DEBUG] rule_sid={rule.sid} packet_eval active_state={has_state} "
+        f"key={connection_key} last_seen={last_seen if last_seen is not None else 'None'} threshold={threshold}s"
+    )
 
     if not has_state:
-        log_attack_state(event)
+        log_attack_state(rule, event)
         print(f"[DEBUG] rule_sid={rule.sid} first alert; allowing")
         return True
 

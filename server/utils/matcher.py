@@ -36,7 +36,7 @@ def matches_base(rule, event):
     ])
   
 def matches_flags(rule, event):
-    return rule.options["flags"] == event.flags
+    return set(rule.options["flags"]) == set(event.flags)
 
 def matches_icmp_type(rule, event):
     return rule.options["icmp_type"] == event.icmp_type
