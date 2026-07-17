@@ -82,7 +82,6 @@ def matches_options(rule, event):
     return True
 
 def match_rule(rule, event):
-
     if not matches_base(rule, event):
         return False
 
@@ -90,11 +89,12 @@ def match_rule(rule, event):
         if not matches_options(rule, event):
             return False
 
-        if not matches_flow(rule, event):
-            return False
+        if "threshold" in rule.options or "track" in rule.options:
+            if not evaluate_threshold(rule, event):
+                return False
 
-        if not evaluate_threshold(rule, event):
-            return False
+    if not matches_flow(rule, event):
+        return False
 
     return True
 

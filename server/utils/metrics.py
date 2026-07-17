@@ -1,23 +1,10 @@
 #Functions to gather the data necessary to match with options
 from server.utils.tracker import get_unique_ports, get_unique_hosts, get_window_count 
 def evaluate_threshold(rule, event):
-    required = [
-        "track",
-        "threshold_type",
-        "count",
-        "time_frame"
-    ]
-
-    if not all(
-        key in rule.options
-        for key in required
-    ):
-        return True
-    
-    track = rule.options["track"]
-    threshold_type = rule.options["threshold_type"]
-    window = int(rule.options["time_frame"])
-    count = int(rule.options["count"])
+    track = rule.options.get("track", "by_src")
+    threshold_type = rule.options.get("threshold_type", "count")
+    window = int(rule.options.get("time_frame", 30))
+    count = int(rule.options.get("count", 25))
 
     if track == "by_dst":
         ip = event.dst_ip
