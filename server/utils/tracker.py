@@ -9,8 +9,8 @@ tracker = {
     "by_dst": defaultdict(lambda: defaultdict(deque))
 }
 port_tracker = {
-    "by_src": defaultdict(lambda: defaultdict(lambda: defaultdict(deque))),
-    "by_dst": defaultdict(lambda: defaultdict(lambda: defaultdict(deque)))
+    "by_src": defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(deque)))),
+    "by_dst": defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(deque))))
 }
 host_tracker = {
     "by_src": defaultdict(dict),
@@ -23,10 +23,12 @@ def get_window_count(track, ip, event_type, window):
     now = time.time()
     return sum(1 for ts in tracker[track][ip][event_type] if now - ts <= window)
 
-#unique ports overall
-def get_unique_ports(track, ip, event_type, window):
+def get_unique_ports(track, src_ip, dst_ip, event_type, window):
     now = time.time()
-    return sum(1 for timestamps in port_tracker [track][ip][event_type].values() if any(now - ts <= window for ts in timestamps))
+    return sum(
+        1 for timestamps in port_tracker[track][src_ip][dst_ip][event_type].values()
+        if any(now - ts <= window for ts in timestamps)
+    )
 
 def get_unique_hosts(track, ip, window):
     now = time.time()
@@ -37,8 +39,8 @@ def record_packet(src_ip, dst_ip, event_type):
     tracker["by_dst"][dst_ip][event_type].append(time.time())
 
 def record_port(src_ip, dst_ip, dst_port, event_type):
-    port_tracker["by_src"][src_ip][event_type][dst_port].append(time.time())
-    port_tracker["by_dst"][dst_ip][event_type][dst_port].append(time.time())
+    port_tracker["by_src"][src_ip][dst_ip][event_type][dst_port].append(time.time())
+    port_tracker["by_dst"][dst_ip][src_ip][event_type][dst_port].append(time.time())
 
 def record_unique_host(src_ip, dst_ip):
     now = time.time()
@@ -131,6 +133,9 @@ def is_to_client(conn, event):
         return False
 
     return (event.src_ip == state["server"] and event.dst_ip == state["client"])
+
+def session_exists(conn):
+    return get_conn_state(conn) is not None
 
 def is_to_server(conn, event):
     state = get_conn_state(conn)

@@ -7,12 +7,12 @@ def evaluate_threshold(rule, event):
     count = int(rule.options.get("count", 25))
 
     if track == "by_dst":
-        ip = event.dst_ip
+        ip, counterpart_ip = event.dst_ip, event.src_ip
     else:
-        ip = event.src_ip
+        ip, counterpart_ip = event.src_ip, event.dst_ip
     
     if threshold_type == "ports":
-        metric = get_unique_ports(track, ip, event.event_type, window)
+        metric = get_unique_ports(track, ip, counterpart_ip, event.event_type, window)
     elif threshold_type == "hosts":
         metric = get_unique_hosts(track, ip, window)
     else:
