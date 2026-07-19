@@ -1,5 +1,5 @@
-#Functions to gather the data necessary to match with options
-from server.utils.tracker import get_unique_ports, get_unique_hosts, get_window_count 
+from server.detection.tracker import get_unique_ports, get_unique_hosts, get_window_count
+
 def evaluate_threshold(rule, event):
     track = rule.options.get("track", "by_src")
     threshold_type = rule.options.get("threshold_type", "count")

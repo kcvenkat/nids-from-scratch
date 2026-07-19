@@ -1,8 +1,5 @@
-#TODO: rename and move into utils folder
-
 from collections import deque, defaultdict
 import time
-from server.detection.rule import RULE_OBJECTS
 
 tracker = {
     "by_src": defaultdict(lambda: defaultdict(deque)),
@@ -160,14 +157,7 @@ def get_half_open_tcp(track, ip):
             count += 1
 
     return count
-    
-def get_available_sid():
-    highest_sid = 0
-    for rule in RULE_OBJECTS:
-        if highest_sid < rule.sid:
-            highest_sid = rule.sid
-    
-    return highest_sid + 1
+
 
 def build_attack_state_key(rule, event):
     return tuple([rule.sid, event.protocol, event.src_ip, event.dst_ip])

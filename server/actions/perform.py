@@ -1,7 +1,7 @@
-from server.utils.matcher import match_rule
+from server.detection.matcher import match_rule
 from server.actions.alert import alert
 from server.actions.log import log
-from server.utils.tracker import should_alert
+from server.detection.tracker import should_alert
 
 def perform_action(rule, event):
     if not match_rule(rule, event):

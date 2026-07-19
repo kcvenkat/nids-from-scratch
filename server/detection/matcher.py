@@ -1,6 +1,6 @@
-from server.utils.tracker import is_established, is_half_open, is_to_client, is_to_server, session_exists
-from server.utils.metrics import evaluate_threshold
-#Functions to detect if a rule matches a packet  
+from server.detection.tracker import is_established, is_half_open, is_to_client, is_to_server, session_exists
+from server.detection.metrics import evaluate_threshold
+
 def matches_protocol(rule, event):
     if rule.protocol.lower() == "any":
         return True
