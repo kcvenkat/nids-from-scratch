@@ -177,30 +177,26 @@ def log_attack_state(rule, event):
     connection_key = build_attack_state_key(rule, event)
     attack_state[connection_key] = time.time()
 
-
-def should_alert(rule, event, threshold=10.0):
+def should_alert(rule, event, threshold=10.0, stale_time=24 * 60 * 60):
     now = time.time()
     connection_key = build_attack_state_key(rule, event)
-    has_state = connection_key in attack_state
     last_seen = attack_state.get(connection_key)
 
-    print(
-        f"[DEBUG] rule_sid={rule.sid} packet_eval active_state={has_state} "
-        f"key={connection_key} last_seen={last_seen if last_seen is not None else 'None'} threshold={threshold}s"
-    )
+    if last_seen is not None and (now - last_seen) > stale_time:
+        attack_state.pop(connection_key, None)
+        last_seen = None
 
-    if not has_state:
+    if last_seen is None:
         log_attack_state(rule, event)
         print(f"[DEBUG] rule_sid={rule.sid} first alert; allowing")
         return True
 
-    elapsed = now - attack_state[connection_key]
+    elapsed = now - last_seen
     print(f"[DEBUG] rule_sid={rule.sid} elapsed={elapsed:.3f}s threshold={threshold}s")
 
     if elapsed >= threshold:
-        attack_state.pop(connection_key)
+        attack_state[connection_key] = now
         print(f"[DEBUG] rule_sid={rule.sid} threshold expired; allowing new alert")
         return True
 
     return False
-        

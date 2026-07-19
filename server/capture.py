@@ -1,10 +1,12 @@
 from scapy.all import PcapWriter, IP, ICMP, UDP, TCP, ARP #type: ignore
 from datetime import datetime, timezone
 import os
+from server.utils.matcher import match_rule
 from server.utils.tracker import *
 from server.event import Event
 from server.detection.rule import RULE_OBJECTS
 from server.utils.perform import perform_action
+from server.utils.tracker import record_packet, record_port, record_unique_host, record_tcp
 from client.extraction.loader import load_rules
 
 MAX_FILES = 48
@@ -58,6 +60,8 @@ def print_formatted(pkt):
 
             event_type = f"TCP:{flags}"
 
+            if flags == "S":
+                record_tcp(src_ip, src_port, dst_ip, dst_port)
         elif UDP in pkt:
             protocol = "UDP"
 
@@ -75,6 +79,9 @@ def print_formatted(pkt):
     print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
     record_packet(src_ip, dst_ip, event_type)
     record_unique_host(src_ip, dst_ip)
+    if src_port is not None and dst_port is not None:
+        record_port(src_ip, dst_ip, dst_port, event_type)
+    
 
     event = Event(
         timestamp=timestamp,
@@ -94,6 +101,9 @@ def print_formatted(pkt):
     )
 
     for rule in RULE_OBJECTS:
+        matched = match_rule(rule, event)
+        print(f"[SCAN CHECK] dst_port={dst_port} src={src_ip}:{src_port} -> dst={dst_ip} "
+            f"rule_sid={rule.sid} matched={matched}")
         perform_action(rule, event)
 
 def print_tracker():
