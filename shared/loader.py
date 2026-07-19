@@ -1,8 +1,8 @@
 from pathlib import Path
-from server.detection.rule import RULE_OBJECTS
-from client.extraction.parser import Parser
+from shared.rule import RULE_OBJECTS
+from shared.parser import Parser
 
-RULE_FILE = Path(__file__).resolve().parent.parent.parent / "rules.txt"
+RULE_FILE = Path(__file__).resolve().parent.parent / "rules.txt"
 
 
 def load_rules():

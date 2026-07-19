@@ -1,5 +1,5 @@
-from server.utils.tracker import get_available_sid
-from server.detection.rule import Rule
+from shared.rule import Rule, get_available_sid
+from shared.rule import Rule
 
 class Parser:
     def __init__(self, rule_string):

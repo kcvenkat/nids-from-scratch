@@ -1,8 +1,6 @@
-#This script is to be run on the host to connect with the virtual machine for packet sniffing
 from scapy.all import sniff
 import struct
 import socket
-from client.extraction.loader import load_rules
 
 SERVER = "172.16.109.131"
 PORT = 5000
@@ -18,13 +16,12 @@ def detect(pkt):
         client.sendall(pkt_len + raw_pkt)
     except BrokenPipeError:
         print("VM disconnected — stopping capture")
-        raise SystemExit  # cleanly exits the sniff loop
+        raise SystemExit
     except Exception as e:
         print("ERROR:", e)
 
 try:
-    load_rules()
-    sniff(iface = IFACE, prn= detect, store = False)
+    sniff(iface=IFACE, prn=detect, store=False)
 except KeyboardInterrupt:
     print("Stopping capture...")
 except BrokenPipeError:
