@@ -3,7 +3,7 @@ import struct
 import os
 import time
 from scapy.all import Ether
-from .capture import *
+from capture import *
 
 PORT = 5000
 
