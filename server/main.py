@@ -6,7 +6,7 @@ from scapy.all import Ether
 from .capture import *
 
 PORT = 5000
-
+PRINT_PACKET = False
 
 def recv_exact(sock, size):
     data = b""
@@ -58,7 +58,10 @@ def main():
 
             pkt = Ether(pkt_data)
             writer.write(pkt)
-            print_formatted(pkt)
+            pkt_tuple = capture_check(pkt)
+
+            if PRINT_PACKET and pkt_tuple is not None:
+                print_formatted(pkt_tuple)
 
     except KeyboardInterrupt:
         print_tracker()

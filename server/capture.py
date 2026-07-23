@@ -13,13 +13,12 @@ from shared.loader import load_rules
 MAX_FILES = 48
 ROTATE_INTERVAL = 1800
 
-def print_formatted(pkt):
+def capture_check(pkt):
     timestamp = time.time()
     pkt_time = datetime.fromtimestamp(
-    pkt.time,
-    tz=timezone.utc
+        pkt.time,
+        tz=timezone.utc
     ).strftime("%Y-%m-%d %H:%M:%S.%f")
-    timestamp = time.time()
 
     protocol = None
     event_type = None
@@ -33,69 +32,55 @@ def print_formatted(pkt):
 
     if ARP in pkt:
         protocol = "ARP"
-
         src_ip = pkt[ARP].psrc
         dst_ip = pkt[ARP].pdst
-
         arp_op = pkt[ARP].op
         event_type = f"ARP:{arp_op}"
 
     elif IP in pkt:
-
         src_ip = pkt[IP].src
         dst_ip = pkt[IP].dst
 
         if ICMP in pkt:
             protocol = "ICMP"
-
             icmp_type = pkt[ICMP].type
             event_type = f"ICMP:{icmp_type}"
 
         elif TCP in pkt:
             protocol = "TCP"
-
             flags = str(pkt[TCP].flags)
-
             src_port = pkt[TCP].sport
             dst_port = pkt[TCP].dport
-
             event_type = f"TCP:{flags}"
 
             if flags == "S":
                 record_tcp(src_ip, src_port, dst_ip, dst_port)
+
         elif UDP in pkt:
             protocol = "UDP"
-
             src_port = pkt[UDP].sport
             dst_port = pkt[UDP].dport
-
             event_type = "UDP"
-
         else:
             return
 
     else:
         return
-                
-    print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
+
     record_packet(src_ip, dst_ip, event_type)
     record_unique_host(src_ip, dst_ip)
+
     if src_port is not None and dst_port is not None:
         record_port(src_ip, dst_ip, dst_port, event_type)
-    
 
     event = Event(
         timestamp=timestamp,
-
         protocol=protocol,
         event_type=event_type,
-
         src_ip=src_ip,
         dst_ip=dst_ip,
-
         src_port=src_port,
         dst_port=dst_port,
-
         flags=flags,
         icmp_type=icmp_type,
         arp_op=arp_op
@@ -104,8 +89,14 @@ def print_formatted(pkt):
     for rule in RULE_OBJECTS:
         matched = match_rule(rule, event)
         print(f"[SCAN CHECK] dst_port={dst_port} src={src_ip}:{src_port} -> dst={dst_ip} "
-            f"rule_sid={rule.sid} matched={matched}")
+              f"rule_sid={rule.sid} matched={matched}")
         perform_action(rule, event)
+
+    return (pkt_time, src_ip, src_port, dst_ip, dst_port, event_type)
+    
+def print_formatted(pkt_tuple):
+    pkt_time, src_ip, src_port, dst_ip, dst_port, event_type = pkt_tuple
+    print(f"{pkt_time}      {src_ip}:{src_port} ---> {dst_ip}:{dst_port}     [{event_type}]")
 
 def print_tracker():
     print("\n" + "="*60)
