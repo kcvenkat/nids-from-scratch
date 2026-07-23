@@ -12,6 +12,7 @@ UI_MODE = "menu"
 RUNNING = True
 conn = None
 server = None
+connected = threading.Event()
 
 def recv_exact(sock, size):
     data = b""
@@ -44,6 +45,7 @@ def main():
 
         conn, addr = server.accept()
         print("Connected:", addr)
+        connected.set()
 
         os.makedirs("captures", exist_ok=True)
         writer = create_writer()
@@ -83,8 +85,10 @@ def main():
         server.close()
 
 def menu():
-    global UI_MODE
-    global RUNNING
+    global UI_MODE, RUNNING
+
+    print("Waiting for connection...")
+    connected.wait()
 
     while RUNNING:
         if UI_MODE == "menu":
