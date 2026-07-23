@@ -4,9 +4,12 @@ import os
 import time
 from scapy.all import Ether
 from .capture import *
+import readchar
+import threading
 
 PORT = 5000
-PRINT_PACKET = False
+UI_MODE = "menu"
+RUNNING = True
 
 def recv_exact(sock, size):
     data = b""
@@ -60,7 +63,7 @@ def main():
             writer.write(pkt)
             pkt_tuple = capture_check(pkt)
 
-            if PRINT_PACKET and pkt_tuple is not None:
+            if UI_MODE == "flow" and pkt_tuple is not None:
                 print_formatted(pkt_tuple)
 
     except KeyboardInterrupt:
@@ -73,6 +76,42 @@ def main():
             conn.close()
         server.close()
 
+def menu():
+    global UI_MODE
+    global RUNNING
+
+    while RUNNING:
+        if UI_MODE == "menu":
+            print("\n--- MENU ---")
+            print("1. Verbose Tracking (press q to quit)")
+            print("2. View/Edit Rules")
+            print("3. Exit")
+            print("Select an option (1-3): ")
+
+            choice = readchar.readkey()
+
+            if choice == "1":
+                print("\n-> Verbose tracking enabled. Press 'q' to quit and return to the menu.")
+                UI_MODE = "flow"
+            elif choice == "2":
+                print("\n Opening rules.txt for editing...")
+            elif choice == "3":
+                print("\n Ending packet captures before exiting the program...")
+                RUNNING = False
+            else:
+                print("\nInvalid choice. Try again.")
+
+        elif UI_MODE == "flow":
+            choice = readchar.readkey()
+            if choice == "q":
+                print("\n-> Returning to the main menu...")
+                UI_MODE = "menu"
 
 if __name__ == "__main__":
-    main()
+    main_thread = threading.Thread(target=main)
+    main_thread.start()
+
+    menu()
+
+    main_thread.join()
+    print("Program has fully closed")
