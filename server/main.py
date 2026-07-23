@@ -10,6 +10,8 @@ import threading
 PORT = 5000
 UI_MODE = "menu"
 RUNNING = True
+conn = None
+server = None
 
 def recv_exact(sock, size):
     data = b""
@@ -24,6 +26,7 @@ def recv_exact(sock, size):
 
 
 def main():
+    global conn, server
     load_rules()
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -98,6 +101,10 @@ def menu():
             elif choice == "3":
                 print("\n Ending packet captures before exiting the program...")
                 RUNNING = False
+                if conn:
+                    conn.close()
+                if server:
+                    server.close()
             else:
                 print("\nInvalid choice. Try again.")
 
