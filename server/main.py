@@ -16,11 +16,14 @@ server = None
 def recv_exact(sock, size):
     data = b""
 
-    while len(data) < size:
-        chunk = sock.recv(size - len(data))
-        if not chunk:
-            return None
-        data += chunk
+    try:
+        while len(data) < size:
+            chunk = sock.recv(size - len(data))
+            if not chunk:
+                return None
+            data += chunk
+    except OSError:
+        return None
 
     return data
 
