@@ -105,7 +105,12 @@ def menu():
                 print("\n Ending packet captures before exiting the program...")
                 RUNNING = False
                 if conn:
+                    try:
+                        conn.shutdown(socket.SHUT_RDWR)
+                    except OSError:
+                        pass
                     conn.close()
+
                 if server:
                     server.close()
             else:
