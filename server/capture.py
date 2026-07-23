@@ -88,8 +88,6 @@ def capture_check(pkt):
 
     for rule in RULE_OBJECTS:
         matched = match_rule(rule, event)
-        print(f"[SCAN CHECK] dst_port={dst_port} src={src_ip}:{src_port} -> dst={dst_ip} "
-              f"rule_sid={rule.sid} matched={matched}")
         perform_action(rule, event)
 
     return (pkt_time, src_ip, src_port, dst_ip, dst_port, event_type)
