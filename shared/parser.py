@@ -1,5 +1,4 @@
 from shared.rule import Rule, get_available_sid
-from shared.rule import Rule
 
 class Parser:
     def __init__(self, rule_string):

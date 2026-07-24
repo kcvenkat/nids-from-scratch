@@ -6,6 +6,7 @@ from scapy.all import Ether
 from .capture import *
 import readchar
 import threading
+from shared.rule_edit import add_rule, edit_rule, remove_rule, view_rules_table, view_rule_details
 
 PORT = 5000
 UI_MODE = "menu"
@@ -51,7 +52,7 @@ def main():
         writer = create_writer()
         file_create_time = time.time()
 
-        while True:
+        while RUNNING:
             if time.time() - file_create_time >= ROTATE_INTERVAL:
                 writer = rotate(writer)
                 file_create_time = time.time()
@@ -84,6 +85,60 @@ def main():
         if conn:
             conn.close()
         server.close()
+def collect_sid():
+    key = input("\nEnter the SID of the rule you want to view details for: ")
+    while not key.isdigit():
+        key = input("Invalid SID. Please enter a numeric value: ")
+    return int(key)
+
+def rule_edit_menu():
+    global UI_MODE
+
+    while UI_MODE == "rule_edit":
+        print("\n--- RULE MENU ---")
+        print("1. View Rules")
+        print("2. View Rule Details")
+        print("3. Add Rule")
+        print("4. Edit Rule")
+        print("5. Delete Rule")
+
+        choice = readchar.readkey()
+
+        if choice == "1":
+            view_rules_table()
+            print("Press 'q' to return to the rule menu.")
+            while True:
+                if readchar.readkey().lower() == "q":
+                    break
+        elif choice == "2":
+            key = collect_sid()
+            view_rule_details(key)
+            print("Press 'q' to return to the rule menu.")
+            while True:
+                if readchar.readkey().lower() == "q":
+                    break
+        elif choice == "3":
+            rule_string = input("Enter the new rule: ")
+            done = add_rule(rule_string)
+            if done:
+                print("Rule successfully added.")
+        elif choice == "4":
+            key = collect_sid()
+            done = edit_rule(key, new_rule=input("Enter the new rule string: "))
+            if done:
+                print("Rule successfully edited.")
+            else:
+                print("Rule edit failed. Please check the SID or RULE SYNTAX and try again.")
+        elif choice == "5":
+            key = collect_sid()
+            done = remove_rule(key)
+            if done:
+                print("Rule successfully removed.")
+            else:
+                print("Rule removal failed. Please check the SID and try again.")
+        elif choice == "q":
+            print("\n-> Returning to the main menu...")
+            UI_MODE = "menu"
 
 def menu():
     global UI_MODE, RUNNING
@@ -105,7 +160,10 @@ def menu():
                 print("\n-> Verbose tracking enabled. Press 'q' to quit and return to the menu.")
                 UI_MODE = "flow"
             elif choice == "2":
-                print("\n Opening rules.txt for editing...")
+                print("\n Opening rule editor...")
+                UI_MODE = "rule_edit"
+                rule_edit_menu()
+                print("Press 'q' to return to the main menu.")
             elif choice == "3":
                 print("\n Ending packet captures before exiting the program...")
                 RUNNING = False
