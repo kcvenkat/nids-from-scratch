@@ -32,6 +32,14 @@ def validate(rule_string):
 
     options = rule.options or {}
 
+    if "sid" not in options:
+        return False, "Rule must include a sid."
+
+    try:
+        int(options["sid"])
+    except ValueError:
+        return False, "sid must be an integer."
+    
     allowed = {
         "msg",
         "flags",
