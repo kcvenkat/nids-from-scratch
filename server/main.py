@@ -58,7 +58,8 @@ def main():
 
             length_data = recv_exact(conn, 4)
             if not length_data:
-                print("TCP packet length unable to be acquired.")
+                if UI_MODE != "exit":
+                    print("TCP packet length unable to be acquired.")
                 break
 
             pkt_len = struct.unpack("!I", length_data)[0]
