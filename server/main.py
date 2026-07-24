@@ -31,7 +31,7 @@ def recv_exact(sock, size):
 
 
 def main():
-    global conn, server
+    global RUNNING, conn, server
     load_rules()
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,15 +58,16 @@ def main():
                 file_create_time = time.time()
 
             length_data = recv_exact(conn, 4)
-            if not length_data:
-                if UI_MODE != "exit":
+            if length_data is None:
+                if RUNNING:
                     print("TCP packet length unable to be acquired.")
                 break
 
             pkt_len = struct.unpack("!I", length_data)[0]
             pkt_data = recv_exact(conn, pkt_len)
-            if not pkt_data:
-                print("Data break detected. Exiting.")
+            if pkt_data is None:
+                if RUNNING:
+                    print("Data break detected. Exiting.")
                 break
 
             pkt = Ether(pkt_data)
@@ -167,6 +168,7 @@ def menu():
             elif choice == "3":
                 print("\n Ending packet captures before exiting the program...")
                 RUNNING = False
+                UI_MODE = "exit"
                 if conn:
                     try:
                         conn.shutdown(socket.SHUT_RDWR)
