@@ -1,8 +1,12 @@
 from scapy.all import sniff
 import struct
 import socket
+from LUCY.assistant import run_assistant
+import threading
+import os
+from dotenv import load_dotenv
 
-SERVER = "172.16.109.131"
+SERVER = "172.16.109.129"
 PORT = 5000
 IFACE = "en0"
 
@@ -38,4 +42,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    load_dotenv()
+
+    AI_ENABLED = bool(os.getenv("GEMINI_API_KEY"))
+    if AI_ENABLED:
+        main_thread = threading.Thread(target=main)
+        main_thread.start()
+
+        run_assistant()
+
+        main_thread.join()
+        print("Program has fully closed")
+    else:
+        main()
