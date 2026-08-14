@@ -1,6 +1,6 @@
-from speech import Speech
-from ai import AI
-from commands import Commands
+from .speech import Speech
+from .ai import AI
+from .commands import Commands
 import pyfiglet
 from rich.console import Console
 import readchar

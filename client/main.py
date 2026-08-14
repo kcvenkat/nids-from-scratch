@@ -23,6 +23,7 @@ def detect(pkt, client):
         print("ERROR:", e)
 
 
+
 def main():
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((SERVER, PORT))

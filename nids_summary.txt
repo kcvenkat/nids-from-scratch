@@ -1,0 +1,8 @@
+=== RULES ===
+One NIDS rule is currently in place, designed to detect SYN scans. This rule triggers an alert if more than 10 SYN packets are detected from a single source within a 5-second timeframe.
+
+=== ALERTS ===
+No alerts were detected. The alerts.jsonl file was not found.
+
+=== SUMMARY ===
+The NIDS has a rule configured to detect potential SYN scan activity. However, there are no recorded alerts to indicate any suspicious or malicious network behavior, nor any confirmed attacks. The system currently reports no active threats based on the available NIDS alert data.

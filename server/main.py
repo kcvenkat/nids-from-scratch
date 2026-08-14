@@ -11,6 +11,7 @@ from shared.rule_edit import add_rule, edit_rule, remove_rule, view_rules_table,
 PORT = 5000
 UI_MODE = "menu"
 RUNNING = True
+RULE_RECV_PORT = 5001
 conn = None
 server = None
 connected = threading.Event()
@@ -28,6 +29,39 @@ def recv_exact(sock, size):
         return None
 
     return data
+
+def ai_listener():
+    rule_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    rule_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    rule_server.bind(("0.0.0.0", RULE_RECV_PORT))
+    rule_server.listen(1)
+    rule_server.settimeout(1.0)
+
+    try:
+        while RUNNING:
+            try:
+                rule_conn, rule_addr = rule_server.accept()
+            except socket.timeout:
+                continue
+            except OSError:
+                break
+            try:
+                length_data = recv_exact(rule_conn, 4)
+                if length_data is None:
+                    continue
+                data_len = struct.unpack("!I", length_data)[0]
+                rule_data = recv_exact(rule_conn, data_len)
+                if rule_data is None:
+                    continue
+                response = rule_data.decode("utf-8")
+                with open("rules.txt", "a") as f:
+                    f.write("\n" + response)
+            except (OSError, UnicodeDecodeError) as e:
+                print(f"Error receiving rules: {e}")   
+            finally:
+                rule_conn.close()
+    finally:
+        rule_server.close()
 
 
 def main():
@@ -188,10 +222,14 @@ def menu():
                 UI_MODE = "menu"
 
 if __name__ == "__main__":
-    main_thread = threading.Thread(target=main)
-    main_thread.start()
+    packet_thread = threading.Thread(target=main)
+    ai_thread = threading.Thread(target=ai_listener)
+
+    packet_thread.start()
+    ai_thread.start()
 
     menu()
 
-    main_thread.join()
+    packet_thread.join()
+    ai_thread.join()
     print("Program has fully closed")

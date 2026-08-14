@@ -1,10 +1,15 @@
 # ai.py
+import struct
+
 from google import genai
 from google.genai import types
 import os
 from dotenv import load_dotenv
-from nids import summarize_prompt, suggest_prompt
+from .nids import summarize_prompt, suggest_prompt
+import socket
 
+RULE_SERVER_PORT = 5001
+SERVER_IP = "172.16.109.129"
 class AI:
     def __init__(self, model="gemini-2.5-flash"):
         lucy_dir = os.path.dirname(os.path.abspath(__file__))
@@ -89,7 +94,17 @@ class AI:
         if not response:
             return "Error: AI returned no rules."
 
-        with open("rules.txt", "a", encoding="utf-8") as f:
-            f.write("\n" + response)
+        try:
+            self.send_rules(response)
+        except OSError as e:
+            return f"Rules were generated, but could not be sent to the NIDS server: {e}"
 
         return "New detection rules generated successfully in rules.txt.\n Note that the AI may generate erroneous rules. Please review the generated rules before using them in a production environment."
+
+    def send_rules(self, response):
+        data = response.encode("utf-8")
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((SERVER_IP, RULE_SERVER_PORT))
+            s.sendall(struct.pack("!I", len(data)))
+            s.sendall(data)
