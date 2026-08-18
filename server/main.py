@@ -6,7 +6,7 @@ from scapy.all import Ether
 from .capture import *
 import readchar
 import threading
-from shared.rule_edit import add_rule, edit_rule, remove_rule, view_rules_table, view_rule_details
+from server.data_objects.rule_edit import add_rule, edit_rule, remove_rule, view_rules_table, view_rule_details
 
 PORT = 5000
 UI_MODE = "menu"
@@ -15,6 +15,13 @@ RULE_RECV_PORT = 5001
 conn = None
 server = None
 connected = threading.Event()
+
+SERVER_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(SERVER_DIR)
+
+RULES_FILE = os.path.join(ROOT_DIR, "rules.txt")
+ALERTS_FILE = os.path.join(ROOT_DIR, "alerts.jsonl")
+LOGS_FILE = os.path.join(ROOT_DIR, "logs.jsonl")
 
 def recv_exact(sock, size):
     data = b""
@@ -30,39 +37,72 @@ def recv_exact(sock, size):
 
     return data
 
+def send_text(sock, text):
+    data = text.encode("utf-8")
+
+    sock.sendall(struct.pack("!I", len(data)))
+    sock.sendall(data)
+
+def read_text_file(path):
+    if not os.path.exists(path):
+        return "ERROR: File not found."
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except OSError as e:
+        return f"ERROR: {e}"
+
 def ai_listener():
-    rule_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    rule_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    rule_server.bind(("0.0.0.0", RULE_RECV_PORT))
-    rule_server.listen(1)
-    rule_server.settimeout(1.0)
+    ai_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ai_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    ai_server.bind(("0.0.0.0", RULE_RECV_PORT))
+    ai_server.listen(1)
+    ai_server.settimeout(1.0)
 
     try:
         while RUNNING:
             try:
-                rule_conn, rule_addr = rule_server.accept()
+                ai_conn, rule_addr = ai_server.accept()
             except socket.timeout:
                 continue
             except OSError:
                 break
             try:
-                length_data = recv_exact(rule_conn, 4)
+                length_data = recv_exact(ai_conn, 4)
                 if length_data is None:
                     continue
                 data_len = struct.unpack("!I", length_data)[0]
-                rule_data = recv_exact(rule_conn, data_len)
+                rule_data = recv_exact(ai_conn, data_len)
                 if rule_data is None:
                     continue
-                response = rule_data.decode("utf-8")
-                with open("rules.txt", "a") as f:
-                    f.write("\n" + response)
-            except (OSError, UnicodeDecodeError) as e:
-                print(f"Error receiving rules: {e}")   
-            finally:
-                rule_conn.close()
-    finally:
-        rule_server.close()
+                message = rule_data.decode("utf-8")
 
+                if message == "GET_RULES":
+                    rules = read_text_file(RULES_FILE)
+                    send_text(ai_conn, rules)
+                elif message == "GET_ALERTS":
+                    alerts = read_text_file(ALERTS_FILE)
+                    send_text(ai_conn, alerts)
+                elif message == "GET_LOGS":
+                    logs = read_text_file(LOGS_FILE)
+                    send_text(ai_conn, logs)
+                elif message.startswith("APPEND_RULES|"):
+                    new_rules = message.split("|", 1)[1]
+                    if not new_rules.strip():
+                        send_text(ai_conn,"EMPTY")
+                    else:
+                        with open(RULES_FILE, "a", encoding="utf-8") as f:
+                            f.write("\n" + new_rules.strip())
+                        send_text(ai_conn, "OK")
+                else:
+                    send_text(ai_conn, "ERROR: Unknown command")
+            except (OSError, UnicodeDecodeError) as e:
+                print(f"ERROR: {e}")
+            finally:
+                ai_conn.close()
+    finally:
+        ai_server.close()
 
 def main():
     global RUNNING, conn, server

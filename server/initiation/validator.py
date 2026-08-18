@@ -1,6 +1,6 @@
 import ipaddress
 
-from shared.parser import Parser
+from server.initiation.parser import Parser
 
 
 def validate(rule_string):

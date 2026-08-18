@@ -1,5 +1,5 @@
-from shared.validator import validate
-from shared.parser import Parser
+from server.validator import validate
+from server.initiation.parser import Parser
 
 def add_rule(rule_string):
     is_valid, error_message = validate(rule_string)

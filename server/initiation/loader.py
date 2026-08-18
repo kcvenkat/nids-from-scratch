@@ -1,6 +1,6 @@
 from pathlib import Path
-from shared.rule import RULE_OBJECTS
-from shared.parser import Parser
+from server.data_objects.rule import RULE_OBJECTS
+from server.initiation.parser import Parser
 
 RULE_FILE = Path(__file__).resolve().parent.parent / "rules.txt"
 

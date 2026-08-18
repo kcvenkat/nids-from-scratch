@@ -4,11 +4,11 @@ import os
 import time
 from server.detection.matcher import match_rule
 from server.detection.tracker import *
-from shared.event import Event
-from shared.rule import RULE_OBJECTS
+from server.data_objects.event import Event
+from server.data_objects.rule import RULE_OBJECTS
 from server.actions.perform import perform_action
 from server.detection.tracker import record_packet, record_port, record_unique_host, record_tcp
-from shared.loader import load_rules
+from server.initiation.loader import load_rules
 import socket
 
 MAX_FILES = 48

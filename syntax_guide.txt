@@ -1,0 +1,170 @@
+1. BASIC RULE STRUCTURE
+------------------------------------------------------------------
+<action> <protocol> <src_ip> <src_port> -> <dst_ip> <dst_port> (option: value; option: value; ...)
+
+  action        alert | log
+  protocol      tcp | udp | icmp | arp
+  src_ip        source IP address or "any"
+  src_port      source port or "any" (ignored for icmp/arp)
+  ->            traffic direction (source to destination)
+  dst_ip        destination IP address or "any"
+  dst_port      destination port or "any" (ignored for icmp/arp)
+  ( ... )       semicolon-separated list of options, each
+                option ends with a semicolon
+
+EVERY RULE NEEDS AN SID. The SID is added via the sid option.
+Example skeleton:
+  alert tcp any any -> any any (flags: S; msg: "example rule"; sid: 1)
+
+
+2. SUPPORTED PROTOCOLS
+------------------------------------------------------------------
+  tcp   - full flag/flow/session matching support
+  udp   - port and flow matching (no flags)
+  icmp  - matched via icmp_type
+  arp   - matched via arp_op
+
+
+3. RULE OPTIONS
+------------------------------------------------------------------
+
+  msg <string>
+      Free-text message attached to the alert/log entry.
+      Always quote the string.
+        msg: "SYN Scan detected"
+
+  flags <string>
+      TCP flag filter. Matches packets carrying the specified
+      flag(s). Common values:
+        S  - SYN
+        A  - ACK
+        F  - FIN
+        R  - RST
+        P  - PSH
+        U  - URG
+      Combine flags directly, e.g. "FA" for FIN+ACK.
+        EX. flags: S;
+        EX. flags: FA;
+
+  icmp_type <int>
+      Filters by ICMP type number (protocol must be icmp).
+      Common types: 0 = Echo Reply, 3 = Dest Unreachable,
+      8 = Echo Request, 11 = Time Exceeded.
+      EX. icmp_type: 8;
+
+  arp_op <int>
+      Filters by ARP opcode (protocol must be arp).
+      1 = request, 2 = reply.
+      EX. arp_op: 1;
+
+  flow <state>
+      Restricts matching to a connection/packet state:
+        stateless    - no state tracking, match every packet
+        established  - only packets with established TCP connections
+        half_open    - session started but not fully completed
+                       (e.g. SYN sent, no full handshake)
+        to_server    - packet direction is client -> server
+        to_client    - packet direction is server -> client
+
+        EX. flow: established;
+
+  track <key>
+      Defines how matching packets are grouped/aggregated for
+      threshold evaluation:
+        by_src  - aggregate per source IP
+        by_dst  - aggregate per destination IP
+        EX. track: by_src;
+
+  threshold_type <type>
+      Metric used when evaluating a threshold (requires track,
+      count, and time_frame to also be set):
+        count  - raw number of matching packets/events
+        ports  - number of distinct destination ports contacted
+        hosts  - number of distinct destination hosts contacted
+        EX. threshold_type: ports;
+
+  count <int>
+      The number of events/ports/hosts (per threshold_type)
+      required within time_frame before the rule fires.
+      EX. count: 10;
+
+  time_frame <int, seconds>
+      Sliding window (in seconds) over which count is evaluated.
+      EX. time_frame: 5;
+
+  threshold <int, seconds>
+      Suppression window (in seconds). After a rule fires, further
+      matches for the same key are suppressed until this many
+      seconds have passed. Used to rate-limit repeated alerts,
+      independent of threshold_type/count/time_frame.
+      EX. threshold: 60;
+
+
+4. HOW THRESHOLD DETECTION WORKS
+------------------------------------------------------------------
+  track + threshold_type + count + time_frame work together:
+
+  EX. track: by_src; threshold_type: count; count: 10; time_frame: 5;
+
+  Reads as: "group events by source IP; if a single source
+  produces 10 matching events within a 5 second window, fire
+  the rule."
+
+  threshold (alone) is separate — it throttles how often an
+  ALREADY-FIRING rule can re-alert for the same key, e.g.:
+
+  EX. threshold: 60;
+
+  means "once this rule fires for a given key, don't fire it
+  again for that same key for 60 seconds," regardless of how
+  many more matches occur.
+
+
+5. EXAMPLE RULES
+------------------------------------------------------------------
+
+  # SYN scan: many SYNs from one source in a short window
+  alert tcp any any -> any any (flags: S; track: by_src;
+  threshold_type: count; count: 10; time_frame: 5;
+  EX. msg: "SYN Scan detected")
+
+  # Maimon scan: FIN+ACK to a closed/unexpected port
+  alert tcp any any -> any any (flags: FA; flow: stateless;
+  msg: "Maimon scan detected")
+
+  # Port scan by distinct ports touched
+  alert tcp any any -> any any (track: by_src; threshold_type: ports;
+  count: 15; time_frame: 10; msg: "Possible port scan")
+
+  # UDP flood detection
+  alert udp any any -> any any (track: by_dst; threshold_type: count;
+  count: 500; time_frame: 5; msg: "UDP flood detected")
+
+  # ICMP ping sweep
+  alert icmp any any -> any any (icmp_type: 8; track: by_src;
+  threshold_type: hosts; count: 20; time_frame: 10;
+  msg: "ICMP ping sweep detected")
+
+  # ARP spoofing / excessive ARP requests
+  alert arp any any -> any any (arp_op: 1; track: by_src;
+  threshold_type: count; count: 30; time_frame: 5;
+  threshold: 60; msg: "Possible ARP spoofing")
+
+  # Established-session-only log rule
+  log tcp any any -> any 22 (flow: established; msg: "SSH session")
+
+
+6. QUICK REFERENCE TABLE
+------------------------------------------------------------------
+  Option           Applies to      Requires
+  ---------------  --------------  --------------------------------
+  msg              all             none
+  flags            tcp             none
+  icmp_type        icmp            none
+  arp_op           arp             none
+  flow             tcp/udp         none
+  track            all             threshold_type, count, time_frame
+  threshold_type   all             track, count, time_frame
+  count            all             track, threshold_type, time_frame
+  time_frame       all             track, threshold_type, count
+  threshold        all             none (standalone suppression)

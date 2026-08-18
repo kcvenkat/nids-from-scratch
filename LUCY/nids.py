@@ -1,24 +1,83 @@
-import os
+import socket
+import struct
 
-LUCY_DIR = os.path.dirname(os.path.abspath(__file__))
 
-ROOT_DIR = os.path.dirname(LUCY_DIR)
+RULE_SERVER_PORT = 5001
+SERVER_IP = "172.16.109.129"
 
-RULES_FILE = os.path.join(ROOT_DIR, "rules.txt")
-ALERTS_FILE = os.path.join(ROOT_DIR, "alerts.jsonl")
+
+def recv_exact(sock, size):
+    data = b""
+
+    while len(data) < size:
+        chunk = sock.recv(size - len(data))
+
+        if not chunk:
+            return None
+
+        data += chunk
+
+    return data
+
+
+def send_request(command, content=""):
+    if content:
+        message = f"{command}|{content}"
+    else:
+        message = command
+
+    data = message.encode("utf-8")
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(5.0)
+            sock.connect((SERVER_IP, RULE_SERVER_PORT))
+
+            sock.sendall(struct.pack("!I", len(data)))
+            sock.sendall(data)
+            length_data = recv_exact(sock, 4)
+
+            if length_data is None:
+                return None
+
+            response_len = struct.unpack("!I", length_data)[0]
+
+            response = recv_exact(sock, response_len)
+
+            if response is None:
+                return None
+
+            return response.decode("utf-8")
+    except (OSError, socket.timeout) as e:
+        print("NIDS server connection error: {e}")
+        return None
+
+
+def get_rules():
+    return send_request("GET_RULES")
+
+def get_alerts():
+    return send_request("GET_ALERTS")
+
+def get_logs():
+    return send_request("GET_LOGS")
+
+def append_rules(rules):
+    return send_request("APPEND_RULES", rules)
 
 def compile():
-    if os.path.exists(RULES_FILE):
-        with open(RULES_FILE, "r") as f:
-            rules = f.readlines()
-    else:
+    rules = get_rules()
+    alerts = get_alerts()
+    logs = get_logs()
+
+    if rules is None:
         rules = "Error: rules.txt file not found."
 
-    if os.path.exists(ALERTS_FILE):
-        with open(ALERTS_FILE, "r") as f:
-            alerts = f.readlines()
-    else:
+    if alerts is None:
         alerts = "Error: alerts.jsonl file not found."
+
+    if logs is None:
+        logs = "Error: logs.jsonl file not found."
 
     compiled = f"""
     *** NIDS RULES ***
@@ -26,6 +85,9 @@ def compile():
 
     *** NIDS ALERTS ***
     {alerts}
+
+    *** NIDS LOGS ***
+    {logs}
     """
 
     return compiled
@@ -86,6 +148,8 @@ def suggest_prompt():
     * `count`: threshold count
     * `time_frame`: evaluation window in seconds
     * `threshold`: alert/log suppression window in seconds
+    * 'sid': An integer number to identify the rule number (keep this rule if added in the 1000s ex. 1001, 1002, 1003, etc.)
+    * 'rev': An integer number to identify the version/revision the rule is currently on
 
     STRICT REQUIREMENTS:
 
@@ -105,7 +169,7 @@ def suggest_prompt():
     14. There MUST be absolutely no text before the first rule or after the final rule.
     15. FAILURE TO FOLLOW THIS OUTPUT FORMAT MAKES THE RESPONSE INVALID.
     16. Every rule MUST be syntactically valid and parsable by the NIDS engine. Invalid rules will be rejected.
-    17. Every rule must include a distinct SID value in its options that is unique and does not conflict with any existing rule SIDs. Use the next available SID value for each new rule.
+    17. Every rule must include a distinct SID value in its options that is unique and does not conflict with any existing rule SIDs. ONLY use the next available SID value for each new rule.
 
     Your job is to simply generate rules based on the provided data. Do NOT provide any explanations, analysis, or commentary. Your output MUST be valid NIDS rules only adhering to the provided syntax. 
     """
